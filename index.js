@@ -22,10 +22,18 @@ class Planets {
 		const p3d = planet.noise.perlin3d;
 		for (let x=0; x<w; ++x) {
 			for (let y=0; y<h; ++y) {
+				//compute color
+				let col;
+				const dx = (x - w/2) / (w/2);
+				const dy = (y - h/2) / (h/2);
+				const d = Math.sqrt(dx*dx + dy*dy);
+				col = d < 0.5 ? [255,0,0] : [0,0,0];
+
+				//write color
 				const idx = (y*w+x)*4;
-				data[idx+0] = Math.floor((p3d(x*0.02,y*0.02,t) + 0.5) * 255);
-				data[idx+1] = Math.floor((p3d(x*0.01,y*0.01,t+0.1) + 0.5) * 255);
-				data[idx+2] = 0;
+				data[idx+0] = col[0];
+				data[idx+1] = col[1];
+				data[idx+2] = col[2];
 				data[idx+3] = 255;
 			}
 		}
