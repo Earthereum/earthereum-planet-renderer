@@ -31,11 +31,18 @@ class Planets {
 
 				//map to spherical surface
 				let coord = Coord.plane2sphere(dy, dx, 1);
+				const rcoord = Coord.sphere2rect(coord.r, coord.t, coord.p);
 				coord.p += time;
 
 				//compute color
 				const type = planet.typeAt(coord.r,coord.t,coord.p);
 				const col = Terrain.colorFor(type);
+
+				let bright = rcoord.y + 0.2;
+				col[0] *= bright;
+				col[1] *= bright;
+				col[2] *= bright;
+
 				// const col = [0, coord.t % (Math.PI) * 40 + 120, coord.p % (Math.PI) * 40 + 120]
 
 				//write color
@@ -153,9 +160,9 @@ class Terrain {
 	static colorFor(type) {
 		switch (type) {
 			case Terrain.ROCK:
-				return [128,100,80];
+				return [234,234,224];
 			case Terrain.WATER:
-				return [50,110,200];
+				return [146,171,190];
 			default:
 				return [255,0,255];
 		}
