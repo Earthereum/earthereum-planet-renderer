@@ -1,14 +1,16 @@
 class Planets {
 	static init() {
 		Planets.canvas = document.querySelector("#display");
-		Planets.canvas.width = 384;
-		Planets.canvas.height = 384;
+		Planets.canvas.width = 450;
+		Planets.canvas.height = 450;
 		Planets.ctx = Planets.canvas.getContext("2d");
 		Planets.ctx.imageSmoothingEnabled = false;
 
 		Planets.bufData = new ImageData(Planets.RENDER_W, Planets.RENDER_H);
 
-		Planets.current = new Planet(0xdeadbeef);
+		Planets.orbitControls = new OrbitControls(Planets.canvas);
+
+		Planets.current = new Planet(0x42069);
 		requestAnimationFrame(Planets.update);
 	}
 
@@ -24,10 +26,12 @@ class Planets {
 		const w = Planets.RENDER_W;
 		const h = Planets.RENDER_H;
 
+		Planets.orbitControls.update();
+
 		const time = Date.now()/1000;
-		const rotX = time*0.4;
-		const rotY = time;
-		const rotZ = -time*0.2;
+		const rotX = Planets.orbitControls.rotX;
+		const rotY = time*0.4 + Planets.orbitControls.rotY;
+		const rotZ = 0;
 
 		const p3d = planet.noise.perlin3d;
 		for (let x=0; x<w; ++x) {
@@ -36,13 +40,13 @@ class Planets {
 				const dx = (x - w/2) / (w/2);
 				const dy = (y - h/2) / (h/2);
 				const d = Math.sqrt(dx*dx + dy*dy);
-				if (d > 1)
+				if (d > planet.size)
 					continue;
 
 				//map to 3D coordinate on sphere
 				let x1 = dx;
 				let y1 = dy;
-				let z1 = Math.sqrt(1 - dx*dx - dy*dy);
+				let z1 = Math.sqrt(planet.size**2 - dx*dx - dy*dy);
 				const x0 = x1, y0 = y1, z0 = z1;
 
 				//apply 3D rotation
@@ -73,19 +77,21 @@ class Planets {
 				}
 
 				//compute color
-				const type = planet.typeAt(x2, y2, z2);
-				const col = Terrain.colorFor(type);
+				const terrain = planet.terrainAt(x2, y2, z2);
+				let [r,g,b] = terrain.color;
 
-				let bright = z0 + 0.2;
-				col[0] *= bright;
-				col[1] *= bright;
-				col[2] *= bright;
+				// let brightFactor = Math.round(z0 * 8) / 8;
+				// brightFactor = Math.min(1, brightFactor);
+				// let bright = brightFactor * 0.5 + 0.5;
+				// r *= bright;
+				// g *= bright;
+				// b *= bright;
 
 				//write color
 				const idx = (y*w+x)*4;
-				data[idx+0] = Math.max(0, Math.min(255, ~~col[0]));
-				data[idx+1] = Math.max(0, Math.min(255, ~~col[1]));
-				data[idx+2] = Math.max(0, Math.min(255, ~~col[2]));
+				data[idx+0] = Math.max(0, Math.min(255, ~~r));
+				data[idx+1] = Math.max(0, Math.min(255, ~~g));
+				data[idx+2] = Math.max(0, Math.min(255, ~~b));
 				data[idx+3] = 255;
 			}
 		}
@@ -99,16 +105,16 @@ class Planets {
 		});
 	}
 }
-Planets.RENDER_W = 128;
-Planets.RENDER_H = 128;
+Planets.RENDER_W = 150;
+Planets.RENDER_H = 150;
 
 class Planet {
 	constructor(seed) {
 		this.noise = new Noise(seed);
 
 		//create attributes for planet
-		this.size = this.noise.rand(0) + 1;
-		this.water = this.noise.rand(1) ** 2;
+		this.size = this.noise.rand(0) * 0.5 + 0.5;
+		this.water = this.noise.rand(1);
 	}
 
 	heightAt(x, y, z) {
@@ -127,37 +133,106 @@ class Planet {
 		z *= 2;
 		const n2 = this.noise.perlin3d(x, y, z) * 0.5;
 
-		x *= 2;
-		y *= 2;
-		z *= 2;
-		const n3 = this.noise.perlin3d(x, y, z) * 0.25;
+		x *= 4;
+		y *= 4;
+		z *= 4;
+		const n3 = this.noise.perlin3d(x, y, z) * 0.125;
 
 		return n1+n2+n3;
 	}
 
-	typeAt(r, t, p) {
-		const h = this.heightAt(r, t, p);
+	terrainAt(x, y, z) {
+		const h = this.heightAt(x, y, z);
 		if (h === 0)
-			return 0;
+			return Terrain.ERROR;
+		
 		if (h < this.water)
 			return Terrain.WATER;
-		return Terrain.ROCK;
+		
+		const lh = h - this.water;
+		if (lh < 0.25)
+			return Terrain.BEACH;
+		return Terrain.LAND;
 	}
 }
 
 class Terrain {
-	static colorFor(type) {
-		switch (type) {
-			case Terrain.ROCK:
-				return [234,234,224];
-			case Terrain.WATER:
-				return [146,171,190];
-			default:
-				return [255,0,255];
+	constructor({color, albedo}) {
+		this.color = color;
+		this.albedo = albedo;
+	}
+}
+Terrain.ERROR = new Terrain({color: [255,0,255], albedo: 0});
+Terrain.WATER = new Terrain({color: [146,171,190], albedo: 0.8});
+Terrain.BEACH = new Terrain({color: [222,222,212], albedo: 0.2});
+Terrain.LAND = new Terrain({color: [201,214,169], albedo: 0.2});
+
+class OrbitControls {
+	constructor(displayElement, speed=0.05, friction=0.08) {
+		this.displayElement = displayElement;
+		this.rotX = 0;
+		this.rotY = 0;
+		
+		this.velX = 0;
+		this.velY = 0;
+
+		this._prevtime = Date.now();
+		this.speed = speed;
+		this.friction = 1-friction;
+
+		this.mouse = {
+			down: false,
+			x: 0,
+			y: 0
+		};
+
+		document.addEventListener("mousedown", event => this.eDown(event), false);
+		document.addEventListener("mousemove", event => this.eMove(event), false);
+		document.addEventListener("mouseup", event => this.eUp(event), false);
+	}
+
+	update() {
+		const dt = (Date.now() - this._prevtime)/1000;
+		
+		this.rotX += this.velX * this.speed * dt;
+		this.rotY += this.velY * this.speed * dt;
+		this.velX *= this.friction;
+		this.velY *= this.friction;
+
+		this.rotX = Math.min(Math.PI * 0.5, Math.max(-Math.PI * 0.5, this.rotX));
+
+		this._prevtime = Date.now();
+	}
+
+	eDown(event) {
+		if (event.target === this.displayElement) {
+			event.preventDefault();
+			this.mouse.down = true;
+			this.mouse.x = event.pageX;
+			this.mouse.y = event.pageY;
+		}
+	}
+
+	eUp(event) {
+		if (this.mouse.down)
+			event.preventDefault();
+
+		this.mouse.down = false;
+	}
+
+	eMove(event) {
+		let oldX = this.mouse.x;
+		let oldY = this.mouse.y;
+		this.mouse.x = event.pageX;
+		this.mouse.y = event.pageY;
+		
+		if (this.mouse.down) {
+			event.preventDefault();
+
+			this.velY -= this.mouse.x - oldX;
+			this.velX += this.mouse.y - oldY;
 		}
 	}
 }
-Terrain.ROCK = 1;
-Terrain.WATER = 2;
 
 window.onload = (event) => Planets.init();
