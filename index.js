@@ -1,8 +1,8 @@
 class Planets {
 	static init() {
 		Planets.canvas = document.querySelector("#display");
-		Planets.canvas.width = 500;
-		Planets.canvas.height = 500;
+		Planets.canvas.width = 384;
+		Planets.canvas.height = 384;
 		Planets.ctx = Planets.canvas.getContext("2d");
 		Planets.ctx.imageSmoothingEnabled = false;
 
@@ -18,7 +18,7 @@ class Planets {
 		const w = Planets.RENDER_W;
 		const h = Planets.RENDER_H;
 
-		const time = Date.now()/500;
+		const time = Date.now()/1000;
 		const p3d = planet.noise.perlin3d;
 		for (let x=0; x<w; ++x) {
 			for (let y=0; y<h; ++y) {
@@ -30,7 +30,7 @@ class Planets {
 					continue;
 
 				//map to spherical surface
-				let coord = Coord.plane2sphere(dy, dx, 10);
+				let coord = Coord.plane2sphere(dy, dx, 1);
 				coord.p += time;
 
 				//compute color
@@ -64,19 +64,24 @@ class Planet {
 
 		//create attributes for planet
 		this.size = this.noise.rand(0) + 1;
-		this.water = 0.2;
+		this.water = 0.5;
 	}
 
 	heightAt(r, t, p) {
 		const C = 78151.135;
-		const coord = Coord.sphere2rect(r, t, p);
-		return this.noise.perlin3d(C+coord.x, C+coord.y, C+coord.z) + 0.5;
+		let coord = Coord.sphere2rect(r, t, p);
+		coord = Coord.add(coord, {x: C, y: C, z: C});
+
+		coord = Coord.scale(coord, 2);
+		const n1 = this.noise.perlin3d(coord.x, coord.y, coord.z) + 0.5;
+		coord = Coord.scale(coord, 4);
+		const n2 = this.noise.perlin3d(coord.x, coord.y, coord.z) * 0.5;
+
+		return n1+n2;
 	}
 
 	typeAt(r, t, p) {
 		const h = this.heightAt(r, t, p);
-		return h;
-
 		if (h === 0)
 			return 0;
 		if (h < this.water)
@@ -86,6 +91,20 @@ class Planet {
 }
 
 class Coord {
+	static add(a, b) {
+		let out = {};
+		for (let k of Object.keys(a))
+			out[k] = a[k] + b[k];
+		return out;
+	}
+
+	static scale(a, c) {
+		let out = {};
+		for (let k of Object.keys(a))
+			out[k] = a[k] * c;
+		return out;
+	}
+
 	static plane2sphere(px, py, radius) {
 		let r = Math.sqrt(px*px + py*py);
 		let d = r ? Math.asin(r) / r : 0;
@@ -132,8 +151,6 @@ class Coord {
 
 class Terrain {
 	static colorFor(type) {
-		return [255*type, 0, 0];
-
 		switch (type) {
 			case Terrain.ROCK:
 				return [128,100,80];
