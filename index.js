@@ -12,7 +12,7 @@ class Planets {
 		requestAnimationFrame(Planets.update);
 	}
 
-	static async update() {
+	static update() {
 		const planet = Planets.current;
 		const data = Planets.bufData.data;
 		const w = Planets.RENDER_W;
@@ -54,12 +54,13 @@ class Planets {
 			}
 		}
 
-		const bmp = await createImageBitmap(Planets.bufData);
-		const ctx = Planets.ctx;
-		ctx.drawImage(bmp, 0, 0, Planets.canvas.width, Planets.canvas.height);
-		bmp.close();
+		createImageBitmap(Planets.bufData).then(bmp => {
+			const ctx = Planets.ctx;
+			ctx.drawImage(bmp, 0, 0, Planets.canvas.width, Planets.canvas.height);
+			bmp.close();
 
-		requestAnimationFrame(Planets.update);
+			requestAnimationFrame(Planets.update);
+		});
 	}
 }
 Planets.RENDER_W = 128;
@@ -83,8 +84,10 @@ class Planet {
 		const n1 = this.noise.perlin3d(coord.x, coord.y, coord.z) + 0.5;
 		coord = Coord.scale(coord, 4);
 		const n2 = this.noise.perlin3d(coord.x, coord.y, coord.z) * 0.5;
+		coord = Coord.scale(coord, 4);
+		const n3 = this.noise.perlin3d(coord.x, coord.y, coord.z) * 0.25;
 
-		return n1+n2;
+		return n1+n2+n3;
 	}
 
 	typeAt(r, t, p) {
