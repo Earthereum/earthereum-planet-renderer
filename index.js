@@ -8,7 +8,7 @@ class Planets {
 
 		Planets.bufData = new ImageData(Planets.RENDER_W, Planets.RENDER_H);
 
-		Planets.current = new Planet(0xF1A5C0);
+		Planets.current = new Planet(0xdeadbeef);
 		requestAnimationFrame(Planets.update);
 	}
 
