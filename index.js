@@ -1,6 +1,16 @@
 class Planets {
 	static init() {
 		Planets.canvas = document.querySelector("#display");
+		document.querySelector("#setseed").addEventListener("click", (event)=>{
+			const inpt = prompt("Enter an int:");
+			const val = Number.parseInt(inpt);
+			if (!Number.isNaN(val)) {
+				Planets.current = new Planet(val);
+			}
+			else {
+				alert("Oops that's not an int");
+			}
+		}, false);
 		Planets.canvas.width = 450;
 		Planets.canvas.height = 450;
 		Planets.ctx = Planets.canvas.getContext("2d");
@@ -36,12 +46,16 @@ class Planets {
 		const p3d = planet.noise.perlin3d;
 		for (let x=0; x<w; ++x) {
 			for (let y=0; y<h; ++y) {
+				const idx = (y*w+x)*4;
+
 				//compute 2D vector
 				const dx = (x - w/2) / (w/2);
 				const dy = (y - h/2) / (h/2);
 				const d = Math.sqrt(dx*dx + dy*dy);
-				if (d > planet.size)
+				if (d > planet.size) {
+					data[idx+3] = 0;
 					continue;
+				}
 
 				//map to 3D coordinate on sphere
 				let x1 = dx;
@@ -88,7 +102,6 @@ class Planets {
 				// b *= bright;
 
 				//write color
-				const idx = (y*w+x)*4;
 				data[idx+0] = Math.max(0, Math.min(255, ~~r));
 				data[idx+1] = Math.max(0, Math.min(255, ~~g));
 				data[idx+2] = Math.max(0, Math.min(255, ~~b));
@@ -98,6 +111,7 @@ class Planets {
 
 		createImageBitmap(Planets.bufData).then(bmp => {
 			const ctx = Planets.ctx;
+			ctx.clearRect(0, 0, Planets.canvas.width, Planets.canvas.height);
 			ctx.drawImage(bmp, 0, 0, Planets.canvas.width, Planets.canvas.height);
 			bmp.close();
 
@@ -150,7 +164,7 @@ class Planet {
 			return Terrain.WATER;
 		
 		const lh = h - this.water;
-		if (lh < 0.25)
+		if (lh < 0.1)
 			return Terrain.BEACH;
 		return Terrain.LAND;
 	}
