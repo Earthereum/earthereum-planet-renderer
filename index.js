@@ -28,22 +28,15 @@ class Planets {
 				const d = Math.sqrt(dx*dx + dy*dy);
 				if (d > 1)
 					continue;
-				// const a = Math.atan2(dy, dx);
 
 				//map to spherical surface
-				let coord = Coord.plane2rect(dx, dy);
-				coord = Coord.rotateX(coord.x, coord.y, coord.z, Math.PI * 0.30);
-				coord = Coord.rect2sphere(coord.x, coord.y, coord.z);
-				coord.t += time;
+				let coord = Coord.plane2sphere(dy, dx, 10);
+				coord.p += time;
 
 				//compute color
 				const type = planet.typeAt(coord.r,coord.t,coord.p);
-				// const col = Terrain.colorFor(type);
-				const col = d <= 1 ? [
-					0,
-					coord.t%(Math.PI*2)*40,
-					127] 
-					: [0,0,0];
+				const col = Terrain.colorFor(type);
+				// const col = [0, coord.t % (Math.PI) * 40 + 120, coord.p % (Math.PI) * 40 + 120]
 
 				//write color
 				const idx = (y*w+x)*4;
@@ -62,8 +55,8 @@ class Planets {
 		requestAnimationFrame(Planets.update);
 	}
 }
-Planets.RENDER_W = 256;
-Planets.RENDER_H = 256;
+Planets.RENDER_W = 128;
+Planets.RENDER_H = 128;
 
 class Planet {
 	constructor(seed) {
@@ -75,12 +68,15 @@ class Planet {
 	}
 
 	heightAt(r, t, p) {
+		const C = 78151.135;
 		const coord = Coord.sphere2rect(r, t, p);
-		return this.noise.perlin3d(coord.x, coord.y, coord.z) + 0.5;
+		return this.noise.perlin3d(C+coord.x, C+coord.y, C+coord.z) + 0.5;
 	}
 
 	typeAt(r, t, p) {
 		const h = this.heightAt(r, t, p);
+		return h;
+
 		if (h === 0)
 			return 0;
 		if (h < this.water)
@@ -90,18 +86,14 @@ class Planet {
 }
 
 class Coord {
-	static plane2rect(px, py) {
-		const f = 1 + px*px + py*py;
+	static plane2sphere(px, py, radius) {
+		let r = Math.sqrt(px*px + py*py);
+		let d = r ? Math.asin(r) / r : 0;
 		return {
-			x: 2*px / f,
-			y: 2*py / f,
-			z: (-1 + px*px + py*py) / f
+			r: radius,
+			t: d*px + Math.PI*0.5,
+			p: d*py + Math.PI*0.5
 		};
-	}
-
-	static plane2sphere(px, py) {
-		const coord = Planet.plane2rect(px, py);
-		return Planet.rect2sphere(coord.x, coord.y, coord.z);
 	}
 
 	static rect2sphere(x, y, z) {
@@ -140,6 +132,8 @@ class Coord {
 
 class Terrain {
 	static colorFor(type) {
+		return [255*type, 0, 0];
+
 		switch (type) {
 			case Terrain.ROCK:
 				return [128,100,80];
