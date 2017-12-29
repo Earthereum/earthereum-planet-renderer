@@ -44,7 +44,7 @@ class Planets {
 
 		const time = Date.now()/1000;
 		const rotX = Planets.orbitControls.rotX;
-		const rotY = Planets.orbitControls.rotX;//time*0.0 + Planets.orbitControls.rotY;
+		const rotY = time*0.0 + Planets.orbitControls.rotY;
 		const rotZ = 0;
 
 		const cam = {w, h, rotX, rotY, rotZ};
@@ -230,10 +230,6 @@ class ParticleRenderer {
 		let {rotX, rotY, rotZ, w, h} = camera;
 		const cx = w * 0.5, cy = h * 0.5;
 
-		rotX = -rotX;
-		rotY = -rotY;
-		// rotZ = -rotZ;
-
 		for (let p of particles) {
 			let x1 = p.x, y1 = p.y, z1 = p.z;
 
@@ -256,7 +252,7 @@ class ParticleRenderer {
 
 			destCtx.globalAlpha = Math.max(0,1-(z1+1)/2);
 			destCtx.fillStyle = p.color;
-			destCtx.fillRect(y1 * cy + cy,x1 * cx + cx,  2, 2);
+			destCtx.fillRect(x1 * cx + cx, y1 * cy + cy, 2, 2);
 			destCtx.globalAlpha = 1;
 		}
 	}
