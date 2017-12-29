@@ -32,7 +32,6 @@ class Planets {
 	 */
 	static update() {
 		const planet = Planets.current;
-		const data = Planets.bufData.data;
 		const w = Planets.RENDER_W;
 		const h = Planets.RENDER_H;
 
@@ -43,80 +42,9 @@ class Planets {
 		const rotY = time*0.4 + Planets.orbitControls.rotY;
 		const rotZ = 0;
 
-		const p3d = planet.noise.perlin3d;
-		for (let x=0; x<w; ++x) {
-			for (let y=0; y<h; ++y) {
-				const idx = (y*w+x)*4;
-
-				//compute 2D vector
-				const dx = (x - w/2) / (w/2);
-				const dy = (y - h/2) / (h/2);
-				const d = Math.sqrt(dx*dx + dy*dy);
-				if (d > planet.size) {
-					data[idx+3] = 0;
-					continue;
-				}
-
-				//map to 3D coordinate on sphere
-				let x1 = dx;
-				let y1 = dy;
-				let z1 = Math.sqrt(planet.size**2 - dx*dx - dy*dy);
-				const x0 = x1, y0 = y1, z0 = z1;
-
-				//apply 3D rotation
-				let x2=x1, y2=y1, z2=z1;
-				if (rotX !== 0) {
-					x2 = x1;
-					y2 = y1 * Math.cos(rotX) - z1 * Math.sin(rotX);
-					z2 = y1 * Math.sin(rotX) + z1 * Math.cos(rotX);
-					x1 = x2;
-					y1 = y2;
-					z1 = z2;
-				}
-				if (rotY !== 0) {
-					x2 = z1 * Math.sin(rotY) + x1 * Math.cos(rotY);
-					y2 = y1;
-					z2 = z1 * Math.cos(rotY) - x1 * Math.sin(rotY);
-					x1 = x2;
-					y1 = y2;
-					z1 = z2;
-				}
-				if (rotZ !== 0) {
-					x2 = x1 * Math.cos(rotZ) - y1 * Math.sin(rotZ);
-					y2 = x1 * Math.sin(rotZ) + y1 * Math.cos(rotZ);
-					z2 = z1;
-					x1 = x2;
-					y1 = y2;
-					z1 = z2;
-				}
-
-				//compute color
-				const terrain = planet.terrainAt(x2, y2, z2);
-				let [r,g,b] = terrain.color;
-
-				let brightFactor = Math.round(z2 * 8) / 8;
-				brightFactor = Math.min(1, brightFactor);
-				let bright = brightFactor * 0.5 + 0.5;
-				r *= bright;
-				g *= bright;
-				b *= bright;
-
-				//write color
-				data[idx+0] = Math.max(0, Math.min(255, ~~r));
-				data[idx+1] = Math.max(0, Math.min(255, ~~g));
-				data[idx+2] = Math.max(0, Math.min(255, ~~b));
-				data[idx+3] = 255;
-			}
-		}
-
-		createImageBitmap(Planets.bufData).then(bmp => {
-			const ctx = Planets.ctx;
-			ctx.clearRect(0, 0, Planets.canvas.width, Planets.canvas.height);
-			ctx.drawImage(bmp, 0, 0, Planets.canvas.width, Planets.canvas.height);
-			bmp.close();
-
-			requestAnimationFrame(Planets.update);
-		});
+		const cam = {w, h, rotX, rotY, rotZ};
+		PlanetRenderer.render(cam, planet, Planets.bufData, Planets.ctx);
+		ParticleRenderer.render(cam, planet.clouds, Planets.ctx);
 	}
 }
 Planets.RENDER_W = 150;
@@ -129,6 +57,9 @@ class Planet {
 		//create attributes for planet
 		this.size = this.noise.rand(0) * 0.5 + 0.5;
 		this.water = this.noise.rand(1);
+
+		//create clouds
+		this.clouds = this._makeClouds();
 	}
 
 	heightAt(x, y, z) {
@@ -168,6 +99,33 @@ class Planet {
 			return Terrain.BEACH;
 		return Terrain.LAND;
 	}
+
+	_makeClouds() {
+		const N = 20;
+		let out = [];
+		for (let i=0; i<N; i++) {
+			const y = Math.random()*2-1;
+			const dir = Math.random()*2*Math.PI;
+			const x = Math.cos(dir);
+			const z = Math.sin(dir);
+			out.push(new Particle({
+				x, y, z,
+				radius: 4,
+				color: "white"
+			}));
+		}
+		return out;
+	}
+}
+
+class Particle {
+	constructor({x, y, z, radius, color}) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.radius = radius;
+		this.color = color;
+	}
 }
 
 class Terrain {
@@ -180,6 +138,85 @@ Terrain.ERROR = new Terrain({color: [255,0,255], albedo: 0});
 Terrain.WATER = new Terrain({color: [146,171,190], albedo: 0.8});
 Terrain.BEACH = new Terrain({color: [222,222,212], albedo: 0.2});
 Terrain.LAND = new Terrain({color: [201,214,169], albedo: 0.2});
+
+class PlanetRenderer {
+	static render(camera, planet, imageData, destCtx) {
+		const data = imageData.data;
+		const {w, h, rotX, rotY, rotZ} = camera;
+
+		for (let x=0; x<w; ++x) {
+			for (let y=0; y<h; ++y) {
+				const idx = (y*w+x)*4;
+
+				//compute 2D vector
+				const dx = (x - w/2) / (w/2);
+				const dy = (y - h/2) / (h/2);
+				const d = Math.sqrt(dx*dx + dy*dy);
+				if (d > planet.size) {
+					data[idx+3] = 0;
+					continue;
+				}
+
+				//map to 3D coordinate on sphere
+				let x1 = dx;
+				let y1 = dy;
+				let z1 = Math.sqrt(planet.size**2 - dx*dx - dy*dy);
+				const x0 = x1, y0 = y1, z0 = z1;
+
+				//apply 3D rotation
+				if (rotX !== 0) {
+					const yt = y1, zt = z1;
+					y1 = yt * Math.cos(rotX) - zt * Math.sin(rotX);
+					z1 = yt * Math.sin(rotX) + zt * Math.cos(rotX);
+				}
+				if (rotY !== 0) {
+					const zt = z1, xt = x1;
+					x1 = zt * Math.sin(rotY) + xt * Math.cos(rotY);
+					z1 = zt * Math.cos(rotY) - xt * Math.sin(rotY);
+				}
+				if (rotZ !== 0) {
+					const xt = x1, yt = y1;
+					x1 = xt * Math.cos(rotZ) - yt * Math.sin(rotZ);
+					y1 = xt * Math.sin(rotZ) + yt * Math.cos(rotZ);
+				}
+
+				//compute color
+				const terrain = planet.terrainAt(x1, y1, z1);
+				let [r,g,b] = terrain.color;
+
+				let brightFactor = Math.round(z1 * 8) / 8;
+				brightFactor = Math.min(1, brightFactor);
+				let bright = brightFactor * 0.5 + 0.5;
+				r *= bright;
+				g *= bright;
+				b *= bright;
+
+				//write color
+				data[idx+0] = Math.max(0, Math.min(255, ~~r));
+				data[idx+1] = Math.max(0, Math.min(255, ~~g));
+				data[idx+2] = Math.max(0, Math.min(255, ~~b));
+				data[idx+3] = 255;
+			}
+		}
+
+		createImageBitmap(imageData).then(bmp => {
+			const canvas = destCtx.canvas;
+			destCtx.clearRect(0, 0, canvas.width, canvas.height);
+			destCtx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+			bmp.close();
+
+			requestAnimationFrame(Planets.update);
+		});
+	}
+}
+
+class ParticleRenderer {
+	static render(camera, particles, destCtx) {
+		for (let p of particles) {
+
+		}
+	}
+}
 
 class OrbitControls {
 	constructor(displayElement, speed=0.05, friction=0.08) {
