@@ -16,6 +16,11 @@ class Planets {
 		Planets.ctx = Planets.canvas.getContext("2d");
 		Planets.ctx.imageSmoothingEnabled = false;
 
+		Planets.buffer = document.createElement("canvas");
+		Planets.buffer.width = Planets.RENDER_W;
+		Planets.buffer.height = Planets.RENDER_H;
+		Planets.bctx = Planets.buffer.getContext("2d");
+
 		Planets.bufData = new ImageData(Planets.RENDER_W, Planets.RENDER_H);
 
 		Planets.orbitControls = new OrbitControls(Planets.canvas);
@@ -39,12 +44,25 @@ class Planets {
 
 		const time = Date.now()/1000;
 		const rotX = Planets.orbitControls.rotX;
-		const rotY = time*0.4 + Planets.orbitControls.rotY;
+		const rotY = Planets.orbitControls.rotX;//time*0.0 + Planets.orbitControls.rotY;
 		const rotZ = 0;
 
 		const cam = {w, h, rotX, rotY, rotZ};
-		PlanetRenderer.render(cam, planet, Planets.bufData, Planets.ctx);
-		ParticleRenderer.render(cam, planet.clouds, Planets.ctx);
+		
+		PlanetRenderer.render(cam, planet, Planets.bufData);
+
+		createImageBitmap(Planets.bufData).then(bmp => {
+			const canvas = Planets.canvas;
+			Planets.bctx.clearRect(0, 0, w, h);
+			Planets.bctx.drawImage(bmp, 0, 0);
+			bmp.close();
+
+			ParticleRenderer.render(cam, planet.clouds, Planets.bctx);
+			
+			Planets.ctx.clearRect(0, 0, canvas.width, canvas.height);
+			Planets.ctx.drawImage(Planets.buffer, 0, 0, canvas.width, canvas.height);
+			requestAnimationFrame(Planets.update);
+		});
 	}
 }
 Planets.RENDER_W = 150;
@@ -101,17 +119,21 @@ class Planet {
 	}
 
 	_makeClouds() {
-		const N = 20;
+		const N = 500;
 		let out = [];
 		for (let i=0; i<N; i++) {
-			const y = Math.random()*2-1;
+			const y = Math.random()-0.5;
 			const dir = Math.random()*2*Math.PI;
-			const x = Math.cos(dir);
-			const z = Math.sin(dir);
+			const len = this.size + Math.random()*0.1;
+			const x = Math.cos(dir) * len;
+			const z = Math.sin(dir) * len;
+			// const x = Math.random()*2-1;
+			// const y = Math.random()*2-1;
+			// const z = Math.random()*2-1;
 			out.push(new Particle({
 				x, y, z,
 				radius: 4,
-				color: "white"
+				color: "yellow"
 			}));
 		}
 		return out;
@@ -199,21 +221,43 @@ class PlanetRenderer {
 			}
 		}
 
-		createImageBitmap(imageData).then(bmp => {
-			const canvas = destCtx.canvas;
-			destCtx.clearRect(0, 0, canvas.width, canvas.height);
-			destCtx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
-			bmp.close();
-
-			requestAnimationFrame(Planets.update);
-		});
+		
 	}
 }
 
 class ParticleRenderer {
 	static render(camera, particles, destCtx) {
-		for (let p of particles) {
+		let {rotX, rotY, rotZ, w, h} = camera;
+		const cx = w * 0.5, cy = h * 0.5;
 
+		rotX = -rotX;
+		rotY = -rotY;
+		// rotZ = -rotZ;
+
+		for (let p of particles) {
+			let x1 = p.x, y1 = p.y, z1 = p.z;
+
+			//apply rotation
+			if (rotX !== 0) {
+				const yt = y1, zt = z1;
+				y1 = yt * Math.cos(rotX) - zt * Math.sin(rotX);
+				z1 = yt * Math.sin(rotX) + zt * Math.cos(rotX);
+			}
+			if (rotY !== 0) {
+				const zt = z1, xt = x1;
+				x1 = zt * Math.sin(rotY) + xt * Math.cos(rotY);
+				z1 = zt * Math.cos(rotY) - xt * Math.sin(rotY);
+			}
+			if (rotZ !== 0) {
+				const xt = x1, yt = y1;
+				x1 = xt * Math.cos(rotZ) - yt * Math.sin(rotZ);
+				y1 = xt * Math.sin(rotZ) + yt * Math.cos(rotZ);
+			}
+
+			destCtx.globalAlpha = Math.max(0,1-(z1+1)/2);
+			destCtx.fillStyle = p.color;
+			destCtx.fillRect(y1 * cy + cy,x1 * cx + cx,  2, 2);
+			destCtx.globalAlpha = 1;
 		}
 	}
 }
