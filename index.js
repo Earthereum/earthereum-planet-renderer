@@ -94,12 +94,12 @@ class Planets {
 				const terrain = planet.terrainAt(x2, y2, z2);
 				let [r,g,b] = terrain.color;
 
-				// let brightFactor = Math.round(z0 * 8) / 8;
-				// brightFactor = Math.min(1, brightFactor);
-				// let bright = brightFactor * 0.5 + 0.5;
-				// r *= bright;
-				// g *= bright;
-				// b *= bright;
+				let brightFactor = Math.round(z2 * 8) / 8;
+				brightFactor = Math.min(1, brightFactor);
+				let bright = brightFactor * 0.5 + 0.5;
+				r *= bright;
+				g *= bright;
+				b *= bright;
 
 				//write color
 				data[idx+0] = Math.max(0, Math.min(255, ~~r));
