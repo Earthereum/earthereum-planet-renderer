@@ -122,9 +122,9 @@ class Planet {
 		const N = 500;
 		let out = [];
 		for (let i=0; i<N; i++) {
-			const y = Math.random()-0.5;
+			const y = Math.random()*0.1;
 			const dir = Math.random()*2*Math.PI;
-			const len = this.size + Math.random()*0.1;
+			const len = this.size + Math.random()*0.5 + 0.2;
 			const x = Math.cos(dir) * len;
 			const z = Math.sin(dir) * len;
 			// const x = Math.random()*2-1;
@@ -234,15 +234,15 @@ class ParticleRenderer {
 			let x1 = p.x, y1 = p.y, z1 = p.z;
 
 			//apply rotation
-			if (rotX !== 0) {
-				const yt = y1, zt = z1;
-				y1 = yt * Math.cos(rotX) - zt * Math.sin(rotX);
-				z1 = yt * Math.sin(rotX) + zt * Math.cos(rotX);
-			}
 			if (rotY !== 0) {
 				const zt = z1, xt = x1;
 				x1 = zt * Math.sin(rotY) + xt * Math.cos(rotY);
 				z1 = zt * Math.cos(rotY) - xt * Math.sin(rotY);
+			}
+			if (rotX !== 0) {
+				const yt = y1, zt = z1;
+				y1 = yt * Math.cos(rotX) - zt * Math.sin(rotX);
+				z1 = yt * Math.sin(rotX) + zt * Math.cos(rotX);
 			}
 			if (rotZ !== 0) {
 				const xt = x1, yt = y1;
