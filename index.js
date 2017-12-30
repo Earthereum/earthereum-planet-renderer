@@ -141,7 +141,7 @@ class Planet {
 			out.push(new Particle({
 				x, y, z,
 				radius: (v - min) / min * 4,
-				color: "rgba(255,255,255,0.5)"
+				color: "rgba(255,255,255,0.9)"
 			}));
 		}
 		return out;
@@ -214,12 +214,12 @@ class PlanetRenderer {
 				const terrain = planet.terrainAt(x1, y1, z1);
 				let [r,g,b] = terrain.color;
 
-				let brightFactor = Math.round(z1 * 8) / 8;
-				brightFactor = Math.min(1, brightFactor);
-				let bright = brightFactor * 0.5 + 0.5;
-				r *= bright;
-				g *= bright;
-				b *= bright;
+				// let brightFactor = Math.round(z1 * 8) / 8;
+				// brightFactor = Math.min(1, brightFactor);
+				// let bright = brightFactor * 0.5 + 0.5;
+				// r *= bright;
+				// g *= bright;
+				// b *= bright;
 
 				//write color
 				data[idx+0] = Math.max(0, Math.min(255, ~~r));
