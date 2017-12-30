@@ -34,10 +34,24 @@ class Planets {
 		const update = () => Planets.current.rebuild();
 
 		gui.remember(traits);
-		gui.add(traits, "size", 0, 1).onChange(update);
-		gui.add(traits, "water", 0, 1).onChange(update);
-		gui.add(traits, "atmoDensity", 0, 1).onChange(update);
-		gui.add(traits, "cloudDensity", 0, 1).onChange(update);
+		gui.add(traits, "size", 0, 1).onChange(update).listen();
+		gui.add(traits, "water", 0, 1).onChange(update).listen();
+		gui.add(traits, "atmoDensity", 0, 1).onChange(update).listen();
+		gui.add(traits, "cloudDensity", 0, 1).onChange(update).listen();
+		gui.addColor(traits, "baseColor").onChange(update).listen();
+		gui.addColor(traits, "accColor").onChange(update).listen();
+		gui.add(traits, "numTerrains", 2, 8, 1).onChange(update).listen();
+
+		gui.add({"random": () => {
+			traits.size = Math.random() * 0.7 + 0.3;
+			traits.water = Math.random();
+			traits.atmoDensity = Math.random();
+			traits.cloudDensity = Math.random();
+			// traits.baseColor = chroma.random().hex();
+			// traits.accColor = chroma.random().hex();
+			traits.numTerrains = Math.round(Math.random()*6)+2;
+			update();
+		}}, "random");
 
 		Planets.gui = gui;
 	}
@@ -86,20 +100,12 @@ Planets.RENDER_W = 150;
 Planets.RENDER_H = 150;
 Planets.traits = { //default traits
 	"size": 0.7,
-	"water": 0.6,
+	"water": 0.5,
 	"atmoDensity": 0.5,
-	"cloudDensity": 0.5
+	"cloudDensity": 0.5,
+	"baseColor": 0xa4be92,
+	"accColor": 0xf5dac3,
+	"numTerrains": 4
 };
-
-class Terrain {
-	constructor({color, albedo}) {
-		this.color = color;
-		this.albedo = albedo;
-	}
-}
-Terrain.ERROR = new Terrain({color: [255,0,255], albedo: 0});
-Terrain.WATER = new Terrain({color: [146,171,190], albedo: 0.8});
-Terrain.BEACH = new Terrain({color: [222,222,212], albedo: 0.2});
-Terrain.LAND = new Terrain({color: [201,214,169], albedo: 0.2});
 
 window.onload = (event) => Planets.init();

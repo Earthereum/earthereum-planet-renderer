@@ -17,8 +17,16 @@ class Planet {
 	 * Must be called to fully reflect changes in planet traits.
 	 */
 	rebuild() {
-		console.log("rebuild")
 		this.noise = new Noise(this.seed);
+		
+		//create terrains
+		this.terrains = TerrainSet.buildSet({
+			numTerrains: this.traits.numTerrains,
+			waterHeight: this.traits.water,
+			baseColor: this.traits.baseColor,
+			accColor: this.traits.accColor
+		});
+
 		this.clouds = this._makeClouds();
 	}
 
@@ -49,7 +57,7 @@ class Planet {
 		const n3 = this.noise.perlin3d(x, y, z) * 0.125;
 
 		//combine octaves
-		return n1+n2+n3;
+		return Math.max(0, n1+n2+n3);
 	}
 
 	/**
@@ -63,18 +71,8 @@ class Planet {
 	 * @returns a Terrain instance representing the terrain type
 	 */
 	terrainAt(x, y, z) {
-		const waterLevel = this.traits.water;
 		const h = this.heightAt(x, y, z);
-		if (h === 0)
-			return Terrain.ERROR;
-		
-		if (h < waterLevel)
-			return Terrain.WATER;
-		
-		const lh = h - waterLevel;
-		if (lh < 0.1)
-			return Terrain.BEACH;
-		return Terrain.LAND;
+		return this.terrains.atHeight(h);
 	}
 
 	/**
@@ -128,6 +126,8 @@ class Planet {
 
 				//compute color
 				const terrain = this.terrainAt(x1, y1, z1);
+				if (!terrain)
+					continue;
 				let [r,g,b] = terrain.color;
 
 				// let brightFactor = Math.round(z1 * 8) / 8;
@@ -149,12 +149,13 @@ class Planet {
 	_makeClouds() {
 		const N = 5000;
 		const {size, atmoDensity, cloudDensity} = this.traits; 
+		const cloudColor = chroma(this.terrains.byName("water").color).set("lab.l", "*2.5");
 		
 		let out = [];
 		let ni = 0;
 		for (let i=0; i<N; i++) {
 			//random spherical coordinate
-			const r = size + 0.05 + this.noise.rand(ni++) * this.noise.rand(ni++) * 0.3 * atmoDensity;
+			const r = size + 0.05 + this.noise.rand(ni++) * this.noise.rand(ni++) * 0.3 * atmoDensity * size;
 			const t = this.noise.rand(ni++)*2*Math.PI;
 			const p = this.noise.rand(ni++)*1*Math.PI;
 
@@ -172,9 +173,63 @@ class Planet {
 			out.push(new Particle({
 				x, y, z,
 				radius: (min - v) / min * 4,
-				color: "rgba(255,255,255,0.9)"
+				color: cloudColor.css()
 			}));
 		}
 		return out;
+	}
+}
+
+class TerrainSet {
+	constructor(list) {
+		this._list = Array.from(list);
+
+		//sort by start height descending
+		this._list.sort((a,b) => b.startHeight - a.startHeight);
+	}
+
+	get length() {
+		return this._list.length;
+	}
+
+	byName(name) {
+		const terrain = this._list.find(t => t.name === name);
+		if (!terrain)
+			return null;
+		return terrain;
+	}
+
+	atHeight(height) {
+		const terrain = this._list.find(t => t.startHeight <= height);
+		if (!terrain)
+			return null;
+		return terrain;
+	}
+
+	static buildSet({numTerrains, waterHeight, baseColor, accColor}) {
+		const waterColor = chroma(accColor).set("hsl.h", "+180").set("lab.l", "*0.5");
+
+		const colors = chroma.scale([baseColor, accColor])
+			.mode("lch")
+			.classes(numTerrains);
+
+		let t = [];
+		t.push(new Terrain({name: "water", color: waterColor.rgb(), startHeight: 0}));
+		for (let i=1; i<numTerrains; i++) {
+			t.push(new Terrain({
+				name: `${i}`, 
+				color: colors(i/numTerrains).rgb(), 
+				startHeight: waterHeight + (1-waterHeight) * (i/numTerrains)
+			}));
+		}
+		return new TerrainSet(t);
+	}
+}
+
+class Terrain {
+	constructor({name="unnamed", color, startHeight}) {
+		this.name = name;
+		this.color = color;
+		this.startHeight = startHeight;
 	}
 }
