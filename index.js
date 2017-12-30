@@ -44,7 +44,7 @@ class Planets {
 
 		const time = Date.now()/1000;
 		const rotX = Planets.orbitControls.rotX;
-		const rotY = time*0.0 + Planets.orbitControls.rotY;
+		const rotY = time*0.4 + Planets.orbitControls.rotY;
 		const rotZ = 0;
 
 		const cam = {w, h, rotX, rotY, rotZ};
@@ -127,13 +127,11 @@ class Planet {
 			const len = this.size + Math.random()*0.5 + 0.2;
 			const x = Math.cos(dir) * len;
 			const z = Math.sin(dir) * len;
-			// const x = Math.random()*2-1;
-			// const y = Math.random()*2-1;
-			// const z = Math.random()*2-1;
+
 			out.push(new Particle({
 				x, y, z,
-				radius: 4,
-				color: "yellow"
+				radius: 2,
+				color: "white"
 			}));
 		}
 		return out;
@@ -252,7 +250,12 @@ class ParticleRenderer {
 
 			destCtx.globalAlpha = Math.max(0,1-(z1+1)/2);
 			destCtx.fillStyle = p.color;
-			destCtx.fillRect(x1 * cx + cx, y1 * cy + cy, 2, 2);
+
+			const size = p.radius;
+			destCtx.fillRect(
+				Math.floor(x1 * cx + cx - size/2),
+				Math.floor(y1 * cy + cy - size/2),
+				Math.floor(size), Math.floor(size));
 			destCtx.globalAlpha = 1;
 		}
 	}
