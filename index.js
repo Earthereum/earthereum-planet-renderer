@@ -37,6 +37,7 @@ class Planets {
 		gui.add(traits, "size", 0, 1).onChange(update);
 		gui.add(traits, "water", 0, 1).onChange(update);
 		gui.add(traits, "atmoDensity", 0, 1).onChange(update);
+		gui.add(traits, "cloudDensity", 0, 1).onChange(update);
 
 		Planets.gui = gui;
 	}
@@ -86,7 +87,8 @@ Planets.RENDER_H = 150;
 Planets.traits = { //default traits
 	"size": 0.7,
 	"water": 0.6,
-	"atmoDensity": 0.5
+	"atmoDensity": 0.5,
+	"cloudDensity": 0.5
 };
 
 class Terrain {

@@ -19,7 +19,6 @@ class Planet {
 	rebuild() {
 		console.log("rebuild")
 		this.noise = new Noise(this.seed);
-		this.cloudDensity = this.traits.water * this.traits.atmoDensity;
 		this.clouds = this._makeClouds();
 	}
 
@@ -149,15 +148,15 @@ class Planet {
 
 	_makeClouds() {
 		const N = 5000;
-		const {size, atmoDensity} = this.traits;
-		const {cloudDensity} = this; 
+		const {size, atmoDensity, cloudDensity} = this.traits; 
 		
 		let out = [];
+		let ni = 0;
 		for (let i=0; i<N; i++) {
 			//random spherical coordinate
-			const r = size + 0.05 + Math.random() * Math.random() * 0.3 * atmoDensity;
-			const t = Math.random()*2*Math.PI;
-			const p = Math.random()*1*Math.PI;
+			const r = size + 0.05 + this.noise.rand(ni++) * this.noise.rand(ni++) * 0.3 * atmoDensity;
+			const t = this.noise.rand(ni++)*2*Math.PI;
+			const p = this.noise.rand(ni++)*1*Math.PI;
 
 			//convert to cartesian
 			const x = r * Math.cos(t) * Math.sin(p);
@@ -172,7 +171,7 @@ class Planet {
 
 			out.push(new Particle({
 				x, y, z,
-				radius: (v - min) * 4,
+				radius: (min - v) / min * 4,
 				color: "rgba(255,255,255,0.9)"
 			}));
 		}

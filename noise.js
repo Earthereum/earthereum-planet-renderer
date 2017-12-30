@@ -49,7 +49,7 @@ class Noise {
 		//blend gradients from each cube corner
 		const lerp = Noise._lerp;
 		return lerp(w, lerp(v, lerp(u, g0, g1), lerp(u, g2, g3)), 
-			   lerp(v, lerp(u, g4, g5), lerp(u, g6, g7)));
+			   lerp(v, lerp(u, g4, g5), lerp(u, g6, g7))) / Math.sqrt(3);
 	}
 
 	/**
