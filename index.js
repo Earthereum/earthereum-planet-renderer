@@ -75,17 +75,18 @@ class Planet {
 		//create attributes for planet
 		this.size = this.noise.rand(0) * 0.5 + 0.5;
 		this.water = this.noise.rand(1);
+		this.atmoDensity = this.noise.rand(2);
 
-		//create clouds
+		this.rebuild();
+	}
+
+	rebuild() {
+		this.cloudDensity = this.water * this.atmoDensity;
+
 		this.clouds = this._makeClouds();
 	}
 
 	heightAt(x, y, z) {
-		const C = 78151.135;
-		x += C;
-		y += C;
-		z += C;
-
 		x *= 2;
 		y *= 2;
 		z *= 2;
@@ -123,7 +124,7 @@ class Planet {
 		let out = [];
 		for (let i=0; i<N; i++) {
 			//random spherical coordinate
-			const r = this.size + 0.05 + Math.random() * 0.1;
+			const r = this.size + 0.05 + Math.random() * Math.random() * 0.3 * this.atmoDensity;
 			const t = Math.random()*2*Math.PI;
 			const p = Math.random()*1*Math.PI;
 
@@ -133,14 +134,14 @@ class Planet {
 			const z = r * Math.cos(p);
 
 			//cloud intensity
-			const min = 0.3;
+			const min = this.cloudDensity;
 			const v = this.noise.perlin3d(x*2,y*4,z*2) + 0.5;
-			if (v > 0.3)
+			if (v > min)
 				continue;
 
 			out.push(new Particle({
 				x, y, z,
-				radius: (v - min) / min * 4,
+				radius: (v - min) * 4,
 				color: "rgba(255,255,255,0.9)"
 			}));
 		}

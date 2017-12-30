@@ -9,6 +9,11 @@ class Noise {
 	}
 
 	perlin3d(x, y, z) {
+		const C = 78151.135
+		x += C;
+		y += C;
+		z += C;
+
 		//unit cube coordinates
 		const X = x & 255,
 			  Y = y & 255, 
