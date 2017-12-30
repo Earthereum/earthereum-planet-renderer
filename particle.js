@@ -1,4 +1,9 @@
 class Particle {
+	/**
+	 * Constructs a particle instance representing an object floating above
+	 * the planet surface.
+	 * Pass a dict containing x, y, z, radius, and color
+	 */
 	constructor({x, y, z, radius, color}) {
 		this.x = x;
 		this.y = y;
@@ -6,10 +11,19 @@ class Particle {
 		this.radius = radius;
 		this.color = color;
 	}
-	
+
+	/**
+	 * Render many particles.
+	 * @param planet the planet associated with the particles
+	 * @param camera the camera parameters to render with
+	 * @param particles an iterable of Particle instances
+	 * @param destCtx the CanvasRenderingContext2D on which to render
+	 */
 	static renderAll(planet, camera, particles, destCtx) {
 		let {rotX, rotY, rotZ, w, h} = camera;
 		const planetSize = planet.traits.size;
+
+		//screen center
 		const cx = w * 0.5, cy = h * 0.5;
 
 		for (let p of particles) {
@@ -37,14 +51,13 @@ class Particle {
 			if (z1 > planetZ)
 				continue;
 
-			destCtx.fillStyle = p.color;
-
+			//render particle
 			const size = p.radius;
+			destCtx.fillStyle = p.color;
 			destCtx.fillRect(
 				Math.floor(x1 * cx + cx - size/2),
 				Math.floor(y1 * cy + cy - size/2),
 				Math.floor(size), Math.floor(size));
-			destCtx.globalAlpha = 1;
 		}
 	}
 }

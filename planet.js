@@ -1,4 +1,10 @@
 class Planet {
+	/**
+	 * Constructs an instance representing a planet.
+	 * Calls rebuild()
+	 * @param seed the seed for this planet
+	 * @param traits a dict mapping traits to values
+	 */
 	constructor(seed, traits) {
 		this.seed = seed;
 		this.traits = traits;
@@ -6,13 +12,27 @@ class Planet {
 		this.rebuild();
 	}
 
+	/**
+	 * Rebuilds noise generator and clouds.
+	 * Must be called to fully reflect changes in planet traits.
+	 */
 	rebuild() {
 		this.noise = new Noise(this.seed);
 		this.cloudDensity = this.traits.water * this.traits.atmoDensity;
 		this.clouds = this._makeClouds();
 	}
 
+	/**
+	 * Compute the height of the planet surface at a given coordinate.
+	 * Note that the coordinate *must be* on the planet surface, otherwise the
+	 * result is nonsense.
+	 * @param x x coordinate
+	 * @param y y coordinate
+	 * @param z z coordinate
+	 * @returns height of the planet terrain
+	 */
 	heightAt(x, y, z) {
+		//compute one octave of noise
 		x *= 2;
 		y *= 2;
 		z *= 2;
@@ -28,9 +48,20 @@ class Planet {
 		z *= 4;
 		const n3 = this.noise.perlin3d(x, y, z) * 0.125;
 
+		//combine octaves
 		return n1+n2+n3;
 	}
 
+	/**
+	 * Get the type of terrain at a given coordinate.
+	 * Depends on Planet.heightAt()
+	 * Note that the coordinate *must be* on the planet surface, otherwise the
+	 * result is nonsense.
+	 * @param x x coordinate
+	 * @param y y coordinate
+	 * @param z z coordinate
+	 * @returns a Terrain instance representing the terrain type
+	 */
 	terrainAt(x, y, z) {
 		const waterLevel = this.traits.water;
 		const h = this.heightAt(x, y, z);
@@ -46,6 +77,12 @@ class Planet {
 		return Terrain.LAND;
 	}
 
+	/**
+	 * Renders the terrain of a planet.
+	 * Thanks to:
+	 * https://stackoverflow.com/questions/17839999/drawing-a-rotating-sphere-by-using-a-pixel-shader-in-direct3d
+	 * https://www.siggraph.org/education/materials/HyperGraph/modeling/mod_tran/3drota.htm
+	 */
 	render(camera, imageData, destCtx) {
 		const data = imageData.data;
 		const {w, h, rotX, rotY, rotZ} = camera;
@@ -68,6 +105,8 @@ class Planet {
 				let x1 = dx;
 				let y1 = dy;
 				let z1 = Math.sqrt(planetSize**2 - dx*dx - dy*dy);
+
+				//store pre-rotation coordinates
 				const x0 = x1, y0 = y1, z0 = z1;
 
 				//apply 3D rotation
