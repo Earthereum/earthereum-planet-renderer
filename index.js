@@ -20,7 +20,7 @@ class Planets {
 		Planets.orbitControls = new OrbitControls(Planets.canvas);
 
 		//create a demo planet
-		Planets.current = new Planet(0x42069, Planets.traits);
+		Planets.current = new Planet(Planets.traits);
 
 		Planets.makeGUI();
 
@@ -34,6 +34,7 @@ class Planets {
 		const update = () => Planets.current.rebuild();
 
 		gui.remember(traits);
+		gui.add(traits, "seed", 0, 0xFFFFFFFF, 1).onChange(update).listen();
 		gui.add(traits, "size", 0, 1).onChange(update).listen();
 		gui.add(traits, "water", 0, 1).onChange(update).listen();
 		gui.add(traits, "atmoDensity", 0, 1).onChange(update).listen();
@@ -43,12 +44,13 @@ class Planets {
 		gui.add(traits, "numTerrains", 2, 8, 1).onChange(update).listen();
 
 		gui.add({"random": () => {
+			traits.seed = Math.floor(Math.random() * 0xFFFFFFFF);
 			traits.size = Math.random() * 0.7 + 0.3;
 			traits.water = Math.random();
 			traits.atmoDensity = Math.random();
 			traits.cloudDensity = Math.random();
-			// traits.baseColor = chroma.random().hex();
-			// traits.accColor = chroma.random().hex();
+			traits.baseColor = chroma.random().desaturate(1).css();
+			traits.accColor = chroma.random().desaturate(1).css();
 			traits.numTerrains = Math.round(Math.random()*6)+2;
 			update();
 		}}, "random");
@@ -99,6 +101,7 @@ class Planets {
 Planets.RENDER_W = 150;
 Planets.RENDER_H = 150;
 Planets.traits = { //default traits
+	"seed": 0x42069,
 	"size": 0.7,
 	"water": 0.5,
 	"atmoDensity": 0.5,

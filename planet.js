@@ -2,11 +2,9 @@ class Planet {
 	/**
 	 * Constructs an instance representing a planet.
 	 * Calls rebuild()
-	 * @param seed the seed for this planet
 	 * @param traits a dict mapping traits to values
 	 */
-	constructor(seed, traits) {
-		this.seed = seed;
+	constructor(traits) {
 		this.traits = traits;
 
 		this.rebuild();
@@ -17,7 +15,7 @@ class Planet {
 	 * Must be called to fully reflect changes in planet traits.
 	 */
 	rebuild() {
-		this.noise = new Noise(this.seed);
+		this.noise = new Noise(this.traits.seed);
 		
 		//create terrains
 		this.terrains = TerrainSet.buildSet({
@@ -210,7 +208,7 @@ class TerrainSet {
 		const waterColor = chroma(accColor).set("hsl.h", "+180").set("lab.l", "*0.5");
 
 		const colors = chroma.scale([baseColor, accColor])
-			.mode("lch")
+			.mode("lab")
 			.classes(numTerrains);
 
 		let t = [];
