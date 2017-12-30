@@ -57,7 +57,7 @@ class Planets {
 			Planets.bctx.drawImage(bmp, 0, 0);
 			bmp.close();
 
-			ParticleRenderer.render(cam, planet.clouds, Planets.bctx);
+			ParticleRenderer.render(planet, cam, planet.clouds, Planets.bctx);
 			
 			Planets.ctx.clearRect(0, 0, canvas.width, canvas.height);
 			Planets.ctx.drawImage(Planets.buffer, 0, 0, canvas.width, canvas.height);
@@ -224,7 +224,7 @@ class PlanetRenderer {
 }
 
 class ParticleRenderer {
-	static render(camera, particles, destCtx) {
+	static render(planet, camera, particles, destCtx) {
 		let {rotX, rotY, rotZ, w, h} = camera;
 		const cx = w * 0.5, cy = h * 0.5;
 
@@ -248,7 +248,10 @@ class ParticleRenderer {
 				y1 = xt * Math.sin(rotZ) + yt * Math.cos(rotZ);
 			}
 
-			destCtx.globalAlpha = Math.max(0,1-(z1+1)/2);
+			const planetZ = Math.sqrt(planet.size**2 - x1*x1 - y1*y1);
+			if (z1 > planetZ)
+				continue;
+
 			destCtx.fillStyle = p.color;
 
 			const size = p.radius;
@@ -264,7 +267,7 @@ class ParticleRenderer {
 class OrbitControls {
 	constructor(displayElement, speed=0.05, friction=0.08) {
 		this.displayElement = displayElement;
-		this.rotX = 0;
+		this.rotX = 0.3;
 		this.rotY = 0;
 		
 		this.velX = 0;
