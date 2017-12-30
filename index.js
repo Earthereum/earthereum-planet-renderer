@@ -1,16 +1,6 @@
 class Planets {
 	static init() {
 		Planets.canvas = document.querySelector("#display");
-		document.querySelector("#setseed").addEventListener("click", (event)=>{
-			const inpt = prompt("Enter an int:");
-			const val = Number.parseInt(inpt);
-			if (!Number.isNaN(val)) {
-				Planets.current = new Planet(val);
-			}
-			else {
-				alert("Oops that's not an int");
-			}
-		}, false);
 		Planets.canvas.width = 450;
 		Planets.canvas.height = 450;
 		Planets.ctx = Planets.canvas.getContext("2d");
@@ -25,7 +15,11 @@ class Planets {
 
 		Planets.orbitControls = new OrbitControls(Planets.canvas);
 
-		Planets.current = new Planet(0x42069);
+		Planets.current = new Planet(0x42069, {
+			"size": 0.7,
+			"water": 0.6,
+			"atmoDensity": 0.5
+		});
 		requestAnimationFrame(Planets.update);
 	}
 
@@ -69,20 +63,16 @@ Planets.RENDER_W = 150;
 Planets.RENDER_H = 150;
 
 class Planet {
-	constructor(seed) {
-		this.noise = new Noise(seed);
-
-		//create attributes for planet
-		this.size = this.noise.rand(0) * 0.5 + 0.5;
-		this.water = this.noise.rand(1);
-		this.atmoDensity = this.noise.rand(2);
+	constructor(seed, traits) {
+		this.seed = seed;
+		this.traits = traits;
 
 		this.rebuild();
 	}
 
 	rebuild() {
-		this.cloudDensity = this.water * this.atmoDensity;
-
+		this.noise = new Noise(this.seed);
+		this.cloudDensity = this.traits.water * this.traits.atmoDensity;
 		this.clouds = this._makeClouds();
 	}
 
@@ -106,14 +96,15 @@ class Planet {
 	}
 
 	terrainAt(x, y, z) {
+		const waterLevel = this.traits.water;
 		const h = this.heightAt(x, y, z);
 		if (h === 0)
 			return Terrain.ERROR;
 		
-		if (h < this.water)
+		if (h < waterLevel)
 			return Terrain.WATER;
 		
-		const lh = h - this.water;
+		const lh = h - waterLevel;
 		if (lh < 0.1)
 			return Terrain.BEACH;
 		return Terrain.LAND;
@@ -121,10 +112,13 @@ class Planet {
 
 	_makeClouds() {
 		const N = 5000;
+		const {size, atmoDensity} = this.traits;
+		const {cloudDensity} = this; 
+		
 		let out = [];
 		for (let i=0; i<N; i++) {
 			//random spherical coordinate
-			const r = this.size + 0.05 + Math.random() * Math.random() * 0.3 * this.atmoDensity;
+			const r = size + 0.05 + Math.random() * Math.random() * 0.3 * atmoDensity;
 			const t = Math.random()*2*Math.PI;
 			const p = Math.random()*1*Math.PI;
 
@@ -134,7 +128,7 @@ class Planet {
 			const z = r * Math.cos(p);
 
 			//cloud intensity
-			const min = this.cloudDensity;
+			const min = cloudDensity;
 			const v = this.noise.perlin3d(x*2,y*4,z*2) + 0.5;
 			if (v > min)
 				continue;
@@ -174,6 +168,7 @@ class PlanetRenderer {
 	static render(camera, planet, imageData, destCtx) {
 		const data = imageData.data;
 		const {w, h, rotX, rotY, rotZ} = camera;
+		const planetSize = planet.traits.size;
 
 		for (let x=0; x<w; ++x) {
 			for (let y=0; y<h; ++y) {
@@ -183,7 +178,7 @@ class PlanetRenderer {
 				const dx = (x - w/2) / (w/2);
 				const dy = (y - h/2) / (h/2);
 				const d = Math.sqrt(dx*dx + dy*dy);
-				if (d > planet.size) {
+				if (d > planetSize) {
 					data[idx+3] = 0;
 					continue;
 				}
@@ -191,7 +186,7 @@ class PlanetRenderer {
 				//map to 3D coordinate on sphere
 				let x1 = dx;
 				let y1 = dy;
-				let z1 = Math.sqrt(planet.size**2 - dx*dx - dy*dy);
+				let z1 = Math.sqrt(planetSize**2 - dx*dx - dy*dy);
 				const x0 = x1, y0 = y1, z0 = z1;
 
 				//apply 3D rotation
@@ -237,6 +232,7 @@ class PlanetRenderer {
 class ParticleRenderer {
 	static render(planet, camera, particles, destCtx) {
 		let {rotX, rotY, rotZ, w, h} = camera;
+		const planetSize = planet.traits.size;
 		const cx = w * 0.5, cy = h * 0.5;
 
 		for (let p of particles) {
@@ -259,7 +255,8 @@ class ParticleRenderer {
 				y1 = xt * Math.sin(rotZ) + yt * Math.cos(rotZ);
 			}
 
-			const planetZ = Math.sqrt(planet.size**2 - x1*x1 - y1*y1);
+			//compute z coord of planet at the position of this particle
+			const planetZ = Math.sqrt(planetSize**2 - x1*x1 - y1*y1);
 			if (z1 > planetZ)
 				continue;
 
