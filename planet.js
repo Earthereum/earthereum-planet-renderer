@@ -17,6 +17,7 @@ class Planet {
 	 * Must be called to fully reflect changes in planet traits.
 	 */
 	rebuild() {
+		console.log("rebuild")
 		this.noise = new Noise(this.seed);
 		this.cloudDensity = this.traits.water * this.traits.atmoDensity;
 		this.clouds = this._makeClouds();

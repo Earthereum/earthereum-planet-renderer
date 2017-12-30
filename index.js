@@ -20,14 +20,25 @@ class Planets {
 		Planets.orbitControls = new OrbitControls(Planets.canvas);
 
 		//create a demo planet
-		Planets.current = new Planet(0x42069, {
-			"size": 0.7,
-			"water": 0.6,
-			"atmoDensity": 0.5
-		});
+		Planets.current = new Planet(0x42069, Planets.traits);
+
+		Planets.makeGUI();
 
 		//schedule the first update
 		requestAnimationFrame(Planets.update);
+	}
+
+	static makeGUI() {
+		const traits = Planets.traits;
+		let gui = new dat.gui.GUI();
+		const update = () => Planets.current.rebuild();
+
+		gui.remember(traits);
+		gui.add(traits, "size", 0, 1).onChange(update);
+		gui.add(traits, "water", 0, 1).onChange(update);
+		gui.add(traits, "atmoDensity", 0, 1).onChange(update);
+
+		Planets.gui = gui;
 	}
 
 	/**
@@ -72,6 +83,11 @@ class Planets {
 }
 Planets.RENDER_W = 150;
 Planets.RENDER_H = 150;
+Planets.traits = { //default traits
+	"size": 0.7,
+	"water": 0.6,
+	"atmoDensity": 0.5
+};
 
 class Terrain {
 	constructor({color, albedo}) {
