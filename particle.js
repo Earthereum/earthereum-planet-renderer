@@ -46,25 +46,25 @@ class Particle {
 				y1 = xt * Math.sin(rotZ) + yt * Math.cos(rotZ);
 			}
 
-			//test to see if particle is obscured by planet
+			//test to see if particle is occluded by planet
 			const psize = p.radius / w;
-			const obscuredTest = (x, y) => {
+			const occludedTest = (x, y) => {
 				//compute z coord of planet at the position of this particle
 				// x = Math.round(x);
 				// y = Math.round(y);
 				const planetZ = Math.sqrt(planetSize**2 - x*x - y*y);
 				return z1 > planetZ;
 			}
-			const o0 = obscuredTest(x1 - psize, y1 - psize),
-				  o1 = obscuredTest(x1 + psize, y1 - psize),
-				  o2 = obscuredTest(x1 - psize, y1 + psize),
-				  o3 = obscuredTest(x1 + psize, y1 + psize);
-			if (o0 && o1 && o2 && o3) //fully obscured
+			const o0 = occludedTest(x1 - psize, y1 - psize),
+				  o1 = occludedTest(x1 + psize, y1 - psize),
+				  o2 = occludedTest(x1 - psize, y1 + psize),
+				  o3 = occludedTest(x1 + psize, y1 + psize);
+			if (o0 && o1 && o2 && o3) //fully occluded
 				continue;
-			const obscured = o0 || o1 || o2 || o3; //partially obscured
+			const occluded = o0 || o1 || o2 || o3; //partially occluded
 
 			//do not draw over existing canvas content
-			if (obscured)
+			if (occluded)
 				destCtx.globalCompositeOperation = "destination-over";
 
 			//render particle
@@ -76,7 +76,7 @@ class Particle {
 				Math.round(size), Math.round(size));
 
 			//reset blend mode
-			if (obscured)
+			if (occluded)
 				destCtx.globalCompositeOperation = "source-over";
 		}
 	}
