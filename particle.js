@@ -12,6 +12,45 @@ class Particle {
 		this.color = color;
 	}
 
+	static init() {
+		Particle.image = [];
+		for (let i=1; i<=Particle.IMAGE_SIZE; i++)
+			Particle.image[i] = Particle.makeCircle(i);
+	}
+
+	static makeCircle(size) {
+		const image = document.createElement("canvas");
+		image.width = size;
+		image.height = size;
+
+		const ctx = image.getContext("2d");
+		const idata = ctx.getImageData(0,0,size,size);
+		const data = idata.data;
+
+		for (let x=0; x<size; x++) {
+			for (let y=0; y<size; y++) {
+				const idx = (y*size+x)*4;
+
+				const dx = (x/size - 0.5) * 2;
+				const dy = (y/size - 0.5) * 2;
+				const d = Math.sqrt(dx*dx+dy*dy);
+
+				if (d > 1) {
+					data[idx+3] = 0;
+				}
+				else {
+					data[idx+0] = 255;
+					data[idx+1] = 255;
+					data[idx+2] = 255;
+					data[idx+3] = 255;
+				}
+			}
+		}
+
+		ctx.putImageData(idata, 0, 0);
+		return image;
+	}
+
 	/**
 	 * Render many particles.
 	 * @param planet the planet associated with the particles
@@ -27,6 +66,10 @@ class Particle {
 		const cx = w * 0.5, cy = h * 0.5;
 
 		for (let p of particles) {
+			const size = p.radius * w;
+			if (Math.round(size) < 1)
+				continue;
+
 			let x1 = p.x, y1 = p.y, z1 = p.z;
 
 			//apply rotation
@@ -47,11 +90,9 @@ class Particle {
 			}
 
 			//test to see if particle is occluded by planet
-			const psize = p.radius / w;
+			const psize = p.radius;
 			const occludedTest = (x, y) => {
 				//compute z coord of planet at the position of this particle
-				// x = Math.round(x);
-				// y = Math.round(y);
 				const planetZ = Math.sqrt(planetSize**2 - x*x - y*y);
 				return z1 > planetZ;
 			}
@@ -68,12 +109,20 @@ class Particle {
 				destCtx.globalCompositeOperation = "destination-over";
 
 			//render particle
-			const size = p.radius;
 			destCtx.fillStyle = p.color;
-			destCtx.fillRect(
+			if (size > Particle.IMAGE_SIZE) {
+				destCtx.drawImage(
+				Particle.image[Particle.IMAGE_SIZE],
 				Math.round(x1 * cx + cx - size/2),
 				Math.round(y1 * cy + cy - size/2),
 				Math.round(size), Math.round(size));
+			}
+			else {
+				destCtx.drawImage(
+					Particle.image[Math.min(Particle.IMAGE_SIZE, Math.round(size))],
+					Math.round(x1 * cx + cx - size/2),
+					Math.round(y1 * cy + cy - size/2));
+			}
 
 			//reset blend mode
 			if (occluded)
@@ -81,3 +130,5 @@ class Particle {
 		}
 	}
 }
+Particle.IMAGE_SIZE = 12;
+Particle.init();

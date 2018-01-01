@@ -84,6 +84,10 @@ class Planet {
 		const {w, h, rotX, rotY, rotZ} = camera;
 		const planetSize = this.traits.size;
 
+		const atmoDensity = this.traits.atmoDensity;
+		const haloCol = chroma(this.traits.accColor).set("hsl.h", "+180").rgb();
+		const haloSize = planetSize + atmoDensity * 0.3;
+
 		for (let x=0; x<w; ++x) {
 			for (let y=0; y<h; ++y) {
 				const idx = (y*w+x)*4;
@@ -145,7 +149,7 @@ class Planet {
 	}
 
 	_makeClouds() {
-		const N = 5000;
+		const N = 2000;
 		const {size, atmoDensity, cloudDensity} = this.traits; 
 		const cloudColor = chroma(this.terrains.byName("water").color).set("lab.l", "*2.5");
 		
@@ -170,7 +174,7 @@ class Planet {
 
 			out.push(new Particle({
 				x, y, z,
-				radius: (min - v) / min * 4,
+				radius: (min - v) / min * 0.08,
 				color: cloudColor.css()
 			}));
 		}

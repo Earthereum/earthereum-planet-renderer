@@ -12,6 +12,7 @@ class Planets {
 		Planets.buffer.width = Planets.RENDER_W;
 		Planets.buffer.height = Planets.RENDER_H;
 		Planets.bctx = Planets.buffer.getContext("2d");
+		Planets.bctx.imageSmoothingEnabled = false;
 
 		//create an imagedata for rendering the planet terrain
 		Planets.bufData = new ImageData(Planets.RENDER_W, Planets.RENDER_H);
