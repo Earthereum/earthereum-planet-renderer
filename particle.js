@@ -46,18 +46,38 @@ class Particle {
 				y1 = xt * Math.sin(rotZ) + yt * Math.cos(rotZ);
 			}
 
-			//compute z coord of planet at the position of this particle
-			const planetZ = Math.sqrt(planetSize**2 - x1*x1 - y1*y1);
-			if (z1 > planetZ)
+			//test to see if particle is obscured by planet
+			const psize = p.radius / w;
+			const obscuredTest = (x, y) => {
+				//compute z coord of planet at the position of this particle
+				// x = Math.round(x);
+				// y = Math.round(y);
+				const planetZ = Math.sqrt(planetSize**2 - x*x - y*y);
+				return z1 > planetZ;
+			}
+			const o0 = obscuredTest(x1 - psize, y1 - psize),
+				  o1 = obscuredTest(x1 + psize, y1 - psize),
+				  o2 = obscuredTest(x1 - psize, y1 + psize),
+				  o3 = obscuredTest(x1 + psize, y1 + psize);
+			if (o0 && o1 && o2 && o3) //fully obscured
 				continue;
+			const obscured = o0 || o1 || o2 || o3; //partially obscured
+
+			//do not draw over existing canvas content
+			if (obscured)
+				destCtx.globalCompositeOperation = "destination-over";
 
 			//render particle
 			const size = p.radius;
 			destCtx.fillStyle = p.color;
 			destCtx.fillRect(
-				Math.floor(x1 * cx + cx - size/2),
-				Math.floor(y1 * cy + cy - size/2),
-				Math.floor(size), Math.floor(size));
+				Math.round(x1 * cx + cx - size/2),
+				Math.round(y1 * cy + cy - size/2),
+				Math.round(size), Math.round(size));
+
+			//reset blend mode
+			if (obscured)
+				destCtx.globalCompositeOperation = "source-over";
 		}
 	}
 }

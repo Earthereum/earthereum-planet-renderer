@@ -1,0 +1,63 @@
+{
+	"planet": {
+		"categories": {
+			"terrestrial": {
+
+			},
+			"ice": {
+
+			},
+			"gas": {
+
+			}
+		},
+		"composition": {
+			"atmosphere": {
+				"nitrogen": {
+
+				},
+				"oxygen": {
+
+				},
+				"carbon dioxide": {
+
+				},
+				"argon": {
+
+				},
+				"methane": {
+
+				},
+				"sodium": {
+
+				},
+				"hydrogen": {
+
+				},
+				"helium": {
+
+				}
+			},
+			"interior": {
+				"enstatite": {
+					"color": ["#756651", "#CBC8BB", "#917848", "#949899", "#A0A889"]
+				},
+				"iron": {
+					"color": ["#E27724", "#B35727", "#F15820", "##976055"]
+				},
+				"carbon": {
+					"color": "white",
+					"traits": {
+						"water": 0
+					}
+				},
+				"sulfur": {
+					"color": "gold"
+				},
+				"water": {
+					"color": "steelblue"
+				}
+			}
+		}
+	}
+}
