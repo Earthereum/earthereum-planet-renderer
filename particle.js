@@ -23,24 +23,31 @@ class Particle {
 		Particle.colorCtx = Particle.colorBuffer.getContext("2d");
 	}
 
-	static colorImage(img, color) {
+	static colorCanvas(canvas, color) {
 		const buf = Particle.colorBuffer;
 		const bctx = Particle.colorCtx;
-		const w = img.width, h = img.height;
+		const ctx = canvas.getContext("2d");
+		const w = canvas.width, h = canvas.height;
 
 		// //increase buffer size if necessary
-		// if (w > buf.width)
-		// 	buf.width = w;
-		// if (h > buf.height)
-		// 	buf.height = h;
+		if (w > buf.width)
+			buf.width = w;
+		if (h > buf.height)
+			buf.height = h;
 
+		//copy canvas to buffer
 		bctx.globalCompositeOperation = "copy";
-		bctx.fillStyle = color;
-		bctx.fillRect(0, 0, w, h);
-		bctx.globalCompositeOperation = "destination-in";
-		bctx.drawImage(img, 0, 0);		
+		bctx.drawImage(canvas, 0, 0);
 
-		return buf;
+		//overwrite canvas with desired color
+		ctx.globalCompositeOperation = "copy";
+		ctx.fillStyle = color;
+		ctx.fillRect(0, 0, w, h);
+
+		//mask canvas with its old contents
+		ctx.globalCompositeOperation = "destination-in";
+		ctx.drawImage(buf, 0, 0);
+		return canvas;
 	}
 
 	static makeCircle(size) {
@@ -86,6 +93,10 @@ class Particle {
 	static renderAll(planet, camera, particles, destCtx) {
 		let {rotX, rotY, rotZ, w, h} = camera;
 		const planetSize = planet.traits.size;
+
+		const pcol = particles[0].color;
+		for (let i in Particle.image)
+			Particle.image[i] = Particle.colorCanvas(Particle.image[i], pcol);
 
 		//screen center
 		const cx = w * 0.5, cy = h * 0.5;
@@ -140,7 +151,7 @@ class Particle {
 				//support particles bigger than Particle.IMAGE_SIZE
 				const img = Particle.image[Particle.IMAGE_SIZE];
 				destCtx.drawImage(
-					Particle.colorImage(img, p.color),
+					img,
 					Math.round(x1 * cx + cx - size/2),
 					Math.round(y1 * cy + cy - size/2),
 					Math.round(size), Math.round(size));
@@ -149,7 +160,7 @@ class Particle {
 				//faster for particles that are <= Particle.IMAGE_SIZE
 				const img = Particle.image[Math.min(Particle.IMAGE_SIZE, Math.round(size))];
 				destCtx.drawImage(
-					Particle.colorImage(img, p.color),
+					img,
 					Math.round(x1 * cx + cx - size/2),
 					Math.round(y1 * cy + cy - size/2));
 			}
