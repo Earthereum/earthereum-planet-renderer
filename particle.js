@@ -94,9 +94,12 @@ class Particle {
 		let {rotX, rotY, rotZ, w, h} = camera;
 		const planetSize = planet.traits.size;
 
-		const pcol = particles[0].color;
-		for (let i in Particle.image)
-			Particle.image[i] = Particle.colorCanvas(Particle.image[i], pcol);
+		//recolor images
+		if (particles.length > 0) {
+			const pcol = particles[0].color;
+			for (let i in Particle.image)
+				Particle.image[i] = Particle.colorCanvas(Particle.image[i], pcol);
+		}
 
 		//screen center
 		const cx = w * 0.5, cy = h * 0.5;
