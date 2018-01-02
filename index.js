@@ -91,7 +91,11 @@ class Planets {
 
 			//render particles onto the buffer canvas
 			Particle.renderAll(planet, cam, planet.clouds, Planets.bctx);
-			
+
+			Planets.bctx.globalCompositeOperation = "lighter";
+			Planets.bctx.drawImage(planet.haloBuffer, 0, 0);
+			Planets.bctx.globalCompositeOperation = "source-over";
+
 			//scale and copy the buffer onto the display canvas
 			Planets.ctx.clearRect(0, 0, canvas.width, canvas.height);
 			Planets.ctx.drawImage(Planets.buffer, 0, 0, canvas.width, canvas.height);

@@ -6,6 +6,9 @@ class Planet {
 	 */
 	constructor(traits) {
 		this.traits = traits;
+		this.haloBuffer = document.createElement("canvas");
+		this.haloBuffer.width = Planets.RENDER_W;
+		this.haloBuffer.height = Planets.RENDER_H;
 
 		this.rebuild();
 	}
@@ -24,6 +27,9 @@ class Planet {
 			baseColor: this.traits.baseColor,
 			accColor: this.traits.accColor
 		});
+
+		//create halo texture
+		this._rebuildHalo();
 
 		this.clouds = this._makeClouds();
 	}
@@ -84,10 +90,6 @@ class Planet {
 		const {w, h, rotX, rotY, rotZ} = camera;
 		const planetSize = this.traits.size;
 
-		const atmoDensity = this.traits.atmoDensity;
-		const haloCol = chroma(this.traits.accColor).set("hsl.h", "+180").rgb();
-		const haloSize = planetSize + atmoDensity * 0.3;
-
 		for (let x=0; x<w; ++x) {
 			for (let y=0; y<h; ++y) {
 				const idx = (y*w+x)*4;
@@ -146,6 +148,60 @@ class Planet {
 				data[idx+3] = 255;
 			}
 		}
+	}
+
+	_rebuildHalo() {
+		const w = Planets.RENDER_W, h = Planets.RENDER_H;
+		const planetSize = this.traits.size;
+
+		const atmoDensity = this.traits.atmoDensity;
+		const haloCol = chroma(this.traits.accColor).set("hsl.h", "+180").rgb();
+		const haloSize = planetSize + atmoDensity * 0.4;
+
+		const hctx = this.haloBuffer.getContext("2d");
+		const idata = hctx.getImageData(0, 0, w, h);
+		const data = idata.data;
+
+
+		for (let x=0; x<w; ++x) {
+			for (let y=0; y<h; ++y) {
+				const idx = (y*w+x)*4;
+
+				//compute 2D vector
+				const dx = (x - w/2) / (w/2);
+				const dy = (y - h/2) / (h/2);
+				const d = Math.sqrt(dx*dx + dy*dy);
+				if (d > haloSize) {
+					data[idx+3] = 0;
+					continue;
+				}
+
+				//compute 3D depth of planet and atmosphere
+				const planetZ = Math.sqrt(planetSize**2 - dx**2 - dy**2);
+				const haloZ = Math.sqrt(haloSize**2 - dx**2 - dy**2);
+
+				//compute depth of atmosphere
+				let dz;
+				if (d > planetSize)
+					dz = haloZ ** 3 * 3; //realistically this should not be scaled
+				else
+					dz = haloZ - planetZ;
+
+				//compute atmospheric coloring
+				let f = dz / (haloSize - planetSize) * 0.15;
+				f = Math.round(f * 14) / 14; //color steps
+
+				const r = haloCol[0];
+				const g = haloCol[1];
+				const b = haloCol[2];
+
+				data[idx+0] = Math.max(0, Math.min(255, ~~r));
+				data[idx+1] = Math.max(0, Math.min(255, ~~g));
+				data[idx+2] = Math.max(0, Math.min(255, ~~b));
+				data[idx+3] = Math.max(0, Math.min(255, ~~(f*255)));
+			}
+		}
+		hctx.putImageData(idata, 0, 0);
 	}
 
 	_makeClouds() {
