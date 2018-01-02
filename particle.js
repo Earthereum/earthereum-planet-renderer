@@ -16,6 +16,31 @@ class Particle {
 		Particle.image = [];
 		for (let i=1; i<=Particle.IMAGE_SIZE; i++)
 			Particle.image[i] = Particle.makeCircle(i);
+
+		Particle.colorBuffer = document.createElement("canvas");
+		Particle.colorBuffer.width = Particle.IMAGE_SIZE;
+		Particle.colorBuffer.height = Particle.IMAGE_SIZE;
+		Particle.colorCtx = Particle.colorBuffer.getContext("2d");
+	}
+
+	static colorImage(img, color) {
+		const buf = Particle.colorBuffer;
+		const bctx = Particle.colorCtx;
+		const w = img.width, h = img.height;
+
+		// //increase buffer size if necessary
+		// if (w > buf.width)
+		// 	buf.width = w;
+		// if (h > buf.height)
+		// 	buf.height = h;
+
+		bctx.globalCompositeOperation = "copy";
+		bctx.fillStyle = color;
+		bctx.fillRect(0, 0, w, h);
+		bctx.globalCompositeOperation = "destination-in";
+		bctx.drawImage(img, 0, 0);		
+
+		return buf;
 	}
 
 	static makeCircle(size) {
@@ -93,7 +118,7 @@ class Particle {
 			const psize = p.radius;
 			const occludedTest = (x, y) => {
 				//compute z coord of planet at the position of this particle
-				const planetZ = Math.sqrt(planetSize**2 - x*x - y*y);
+				const planetZ = Math.sqrt(planetSize**2 - x**2 - y**2);
 				return z1 > planetZ;
 			}
 			const o0 = occludedTest(x1 - psize, y1 - psize),
@@ -108,18 +133,23 @@ class Particle {
 			if (occluded)
 				destCtx.globalCompositeOperation = "destination-over";
 
+
 			//render particle
 			destCtx.fillStyle = p.color;
 			if (size > Particle.IMAGE_SIZE) {
+				//support particles bigger than Particle.IMAGE_SIZE
+				const img = Particle.image[Particle.IMAGE_SIZE];
 				destCtx.drawImage(
-				Particle.image[Particle.IMAGE_SIZE],
-				Math.round(x1 * cx + cx - size/2),
-				Math.round(y1 * cy + cy - size/2),
-				Math.round(size), Math.round(size));
+					Particle.colorImage(img, p.color),
+					Math.round(x1 * cx + cx - size/2),
+					Math.round(y1 * cy + cy - size/2),
+					Math.round(size), Math.round(size));
 			}
 			else {
+				//faster for particles that are <= Particle.IMAGE_SIZE
+				const img = Particle.image[Math.min(Particle.IMAGE_SIZE, Math.round(size))];
 				destCtx.drawImage(
-					Particle.image[Math.min(Particle.IMAGE_SIZE, Math.round(size))],
+					Particle.colorImage(img, p.color),
 					Math.round(x1 * cx + cx - size/2),
 					Math.round(y1 * cy + cy - size/2));
 			}
