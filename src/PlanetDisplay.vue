@@ -19,6 +19,14 @@ export default {
 		"resolution-y": {
 			type: Number,
 			default: 150
+		},
+		"paused": {
+			type: Boolean,
+			default: false
+		},
+		"interactive": {
+			type: Boolean,
+			default: true
 		}
 	},
 	data() {
@@ -53,9 +61,20 @@ export default {
 			this.terrainData = new ImageData(this.resolutionX, this.resolutionY);
 
 			//attach orbit controls to the display canvas
-			this.orbitControls = new OrbitControls(canvas);
+			if (this.interactive)
+				this.orbitControls = new OrbitControls(canvas);
+			else
+				this.orbitControls = {update: () => {}, rotX: 0, rotY: 0};
 
+			//render at least once
 			requestAnimationFrame(() => this.update());
+		},
+
+		scheduleUpdate() {
+			if (this.paused)
+				requestAnimationFrame(() => this.scheduleUpdate());
+			else
+				requestAnimationFrame(() => this.update());
 		},
 
 		update() {
@@ -95,7 +114,8 @@ export default {
 				//scale and copy the buffer onto the display canvas
 				this.ctx.clearRect(0, 0, canvas.width, canvas.height);
 				this.ctx.drawImage(this.buffer, 0, 0, canvas.width, canvas.height);
-				requestAnimationFrame(() => this.update());
+				
+				this.scheduleUpdate();
 			});
 		}
 	}

@@ -5,8 +5,8 @@
 </template>
 
 <script>
-import Planet from "./Planet.js";
-import PlanetDisplay from "./PlanetDisplay";
+import Planet from "../src/Planet.js";
+import PlanetDisplay from "../src/PlanetDisplay";
 
 export default {
   name: 'app',
