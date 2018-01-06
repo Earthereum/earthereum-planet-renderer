@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <planet-display :planet="planet"></planet-display>
+    <div class="container">
+      <planet-display :planet="planet"></planet-display>
+    </div>
   </div>
 </template>
 
@@ -31,5 +33,9 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
+.container {
+  width: 500px;
+  height: 400px;
+}
 </style>

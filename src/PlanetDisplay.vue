@@ -1,5 +1,7 @@
 <template>
-<canvas ref="display"></canvas>
+<div class="container">
+	<canvas ref="display"></canvas>
+</div>
 </template>
 
 <script>
@@ -42,8 +44,9 @@ export default {
 		init() {
 			//prepare display canvas
 			const canvas = this.$refs.display;
-			canvas.width = this.$el.offsetWidth;
-			canvas.height = this.$el.offsetHeight;
+			const size = Math.min(this.$el.offsetWidth, this.$el.offsetHeight);
+			canvas.width = size;
+			canvas.height = size;
 			this.ctx = canvas.getContext("2d");
 			this.ctx.imageSmoothingEnabled = false;
 
@@ -124,3 +127,10 @@ export default {
 	}
 }
 </script>
+
+<style scoped>
+.container {
+	display: flex;
+	justify-content: center;
+}
+</style>
