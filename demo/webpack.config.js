@@ -2,13 +2,11 @@ var path = require('path')
 var webpack = require('webpack')
 
 module.exports = {
-  entry: './src/plugin.js',
+  entry: './src/main.js',
   output: {
     path: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',
-    filename: 'build.js',
-    library: 'earthereum-renderer',
-    libraryTarget: 'umd'
+    filename: 'build.js'
   },
   module: {
     rules: [
@@ -41,12 +39,10 @@ module.exports = {
       }
     ]
   },
-  externals: {
-    vue: 'vue'
-  },
   resolve: {
     alias: {
-      'vue$': 'vue/dist/vue.esm.js'
+      'vue$': 'vue/dist/vue.esm.js',
+      'earthereum-renderer': path.resolve(__dirname, '../src/')
     },
     extensions: ['*', '.js', '.vue', '.json']
   },

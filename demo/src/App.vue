@@ -5,8 +5,8 @@
 </template>
 
 <script>
-import Planet from "../src/Planet.js";
-import PlanetDisplay from "../src/PlanetDisplay";
+import Planet from "earthereum-renderer/Planet";
+import PlanetDisplay from "earthereum-renderer/PlanetDisplay";
 
 export default {
   name: 'app',
