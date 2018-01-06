@@ -5,20 +5,19 @@
   "author": "Earthereum",
   "license": " ",
   "private": false,
-  "main": "dist/build.js",
+  "main": "dist/earthereum-renderer.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --open --hot",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
   },
-  "dependencies": {},
+  "dependencies": {
+    "vue": "^2.5.11"
+  },
   "browserslist": [
     "> 1%",
     "last 2 versions",
     "not ie <= 8"
   ],
-  "peerDependencies": {
-    "vue": "^2.5.11"
-  },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
@@ -31,6 +30,7 @@
     "vue-loader": "^13.0.5",
     "vue-template-compiler": "^2.4.4",
     "webpack": "^3.6.0",
-    "webpack-dev-server": "^2.9.1"
+    "webpack-dev-server": "^2.9.1",
+    "webpack-merge": "^4.1.1"
   }
 }

@@ -1,15 +1,8 @@
-var path = require('path')
-var webpack = require('webpack')
+const path = require('path')
+const webpack = require('webpack')
+const merge = require('webpack-merge')
 
-module.exports = {
-  entry: './src/plugin.js',
-  output: {
-    path: path.resolve(__dirname, './dist'),
-    publicPath: '/dist/',
-    filename: 'build.js',
-    library: 'earthereum-renderer',
-    libraryTarget: 'umd'
-  },
+const commonConfig = {
   module: {
     rules: [
       {
@@ -41,9 +34,6 @@ module.exports = {
       }
     ]
   },
-  externals: {
-    vue: 'vue'
-  },
   resolve: {
     alias: {
       'vue$': 'vue/dist/vue.esm.js'
@@ -59,7 +49,33 @@ module.exports = {
     hints: false
   },
   devtool: '#eval-source-map'
-}
+};
+
+module.exports = [
+  merge(commonConfig, {
+    entry: './src/PlanetDisplay.vue',
+    output: {
+      path: path.resolve(__dirname, './dist'),
+      publicPath: '/dist/',
+      filename: 'earthereum-renderer.js',
+      library: 'earthereum-renderer',
+      libraryTarget: 'umd',
+      umdNamedDefine: true
+    },
+    externals: {
+      vue: 'vue'
+    }
+  }),
+
+  merge(commonConfig, {
+    entry: './demo/main.js',
+    output: {
+      path: path.resolve(__dirname, './dist'),
+      publicPath: '/dist/',
+      filename: 'demo.js'
+    }
+  })
+];
 
 if (process.env.NODE_ENV === 'production') {
   module.exports.devtool = '#source-map'
