@@ -1,4 +1,4 @@
-class Noise {
+export default class Noise {
 	constructor(seed) {
 		this.seed = seed;
 		this.P = [];

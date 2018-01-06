@@ -1,4 +1,4 @@
-class Particle {
+export default class Particle {
 	/**
 	 * Constructs a particle instance representing an object floating above
 	 * the planet surface.

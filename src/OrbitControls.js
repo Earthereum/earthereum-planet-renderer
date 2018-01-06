@@ -1,4 +1,4 @@
-class OrbitControls {
+export default class OrbitControls {
 	constructor(displayElement, speed=0.05, friction=0.08) {
 		this.displayElement = displayElement;
 		this.rotX = 0.3;

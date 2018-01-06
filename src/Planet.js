@@ -1,4 +1,8 @@
-class Planet {
+import Particle from "./Particle.js";
+import Noise from "./Noise.js";
+const chroma = require("./chroma.min.js");
+
+export default class Planet {
 	/**
 	 * Constructs an instance representing a planet.
 	 * Calls rebuild()
@@ -6,9 +10,7 @@ class Planet {
 	 */
 	constructor(traits) {
 		this.traits = traits;
-		this.haloBuffer = document.createElement("canvas");
-		this.haloBuffer.width = Planets.RENDER_W;
-		this.haloBuffer.height = Planets.RENDER_H;
+		this._haloDirty = false;
 
 		this.rebuild();
 	}
@@ -29,7 +31,7 @@ class Planet {
 		});
 
 		//create halo texture
-		this._rebuildHalo();
+		this._haloDirty = true;
 
 		this.clouds = this._makeClouds();
 	}
@@ -85,10 +87,13 @@ class Planet {
 	 * https://stackoverflow.com/questions/17839999/drawing-a-rotating-sphere-by-using-a-pixel-shader-in-direct3d
 	 * https://www.siggraph.org/education/materials/HyperGraph/modeling/mod_tran/3drota.htm
 	 */
-	render(camera, imageData, destCtx) {
+	render(camera, imageData, haloBuffer) {
 		const data = imageData.data;
 		const {w, h, rotX, rotY, rotZ} = camera;
 		const planetSize = this.traits.size;
+
+		if (this._haloDirty)
+			this._rebuildHalo(haloBuffer);
 
 		for (let x=0; x<w; ++x) {
 			for (let y=0; y<h; ++y) {
@@ -150,15 +155,15 @@ class Planet {
 		}
 	}
 
-	_rebuildHalo() {
-		const w = Planets.RENDER_W, h = Planets.RENDER_H;
+	_rebuildHalo(haloBuffer) {
+		const w = haloBuffer.width, h = haloBuffer.height;
 		const planetSize = this.traits.size;
 
 		const atmoDensity = this.traits.atmoDensity;
 		const haloCol = chroma(this.traits.accColor).set("hsl.h", "+180").rgb();
 		const haloSize = planetSize + atmoDensity * 0.4;
 
-		const hctx = this.haloBuffer.getContext("2d");
+		const hctx = haloBuffer.getContext("2d");
 		const idata = hctx.getImageData(0, 0, w, h);
 		const data = idata.data;
 
@@ -202,6 +207,7 @@ class Planet {
 			}
 		}
 		hctx.putImageData(idata, 0, 0);
+		this._haloDirty = false;
 	}
 
 	_makeClouds() {
@@ -238,7 +244,7 @@ class Planet {
 	}
 }
 
-class TerrainSet {
+export class TerrainSet {
 	constructor(list) {
 		this._list = Array.from(list);
 
@@ -284,7 +290,7 @@ class TerrainSet {
 	}
 }
 
-class Terrain {
+export class Terrain {
 	constructor({name="unnamed", color, startHeight}) {
 		this.name = name;
 		this.color = color;
