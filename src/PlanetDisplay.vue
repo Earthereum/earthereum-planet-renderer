@@ -6,6 +6,9 @@
 import Planet from "./Planet.js";
 import OrbitControls from "./OrbitControls.js";
 import Particle from "./Particle.js";
+import Noise from "./Noise.js";
+
+export {Planet, OrbitControls, Particle, Noise};
 
 export default {
 	props: {
