@@ -40,14 +40,20 @@ export default {
 	mounted() {
 		this.init();
 	},
+	created() {
+		window.addEventListener("resize", this.handleResize, false);
+	},
+	destroyed() {
+		window.removeEventListener("resize", this.handleResize, false);
+	},
 	methods: {
 		init() {
+			this._dirty = true;
+
 			//prepare display canvas
 			const canvas = this.$refs.display;
-			canvas.width = this.$el.offsetWidth;
-			canvas.height = this.$el.offsetHeight
 			this.ctx = canvas.getContext("2d");
-			this.ctx.imageSmoothingEnabled = false;
+			this.handleResize();
 
 			//create buffer canvas
 			this.buffer = document.createElement("canvas");
@@ -72,17 +78,26 @@ export default {
 				this.orbitControls = {update: () => {}, rotX: 0, rotY: 0};
 
 			//render at least once
-			requestAnimationFrame(() => this.update());
+			requestAnimationFrame(() => this.scheduleUpdate());
+		},
+
+		handleResize() {
+			const canvas = this.$refs.display;
+			canvas.width = this.$el.offsetWidth;
+			canvas.height = this.$el.offsetHeight;
+			this.ctx.imageSmoothingEnabled = false;
+			this._dirty = true;
 		},
 
 		scheduleUpdate() {
-			if (this.paused)
+			if (this.paused && !this._dirty)
 				requestAnimationFrame(() => this.scheduleUpdate());
 			else
 				requestAnimationFrame(() => this.update());
 		},
 
 		update() {
+			this._dirty = false;
 			const planet = this.planet;
 			const w = this.resolutionX;
 			const h = this.resolutionY;
@@ -119,7 +134,13 @@ export default {
 				//scale and copy the buffer onto the display canvas
 				this.ctx.clearRect(0, 0, canvas.width, canvas.height);
 				const size = Math.min(canvas.width, canvas.height);
-				this.ctx.drawImage(this.buffer, (canvas.width - size) / 2, (canvas.height - size) / 2, size, size);
+				this.ctx.drawImage(
+					this.buffer, 
+					(canvas.width - size) / 2, 
+					(canvas.height - size) / 2, 
+					size, 
+					size
+				);
 				
 				this.scheduleUpdate();
 			});
