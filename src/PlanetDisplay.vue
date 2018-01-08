@@ -1,6 +1,6 @@
 <template>
 <div class="container">
-	<canvas ref="display"></canvas>
+	<canvas class="display" ref="display"></canvas>
 </div>
 </template>
 
@@ -44,9 +44,8 @@ export default {
 		init() {
 			//prepare display canvas
 			const canvas = this.$refs.display;
-			const size = Math.min(this.$el.offsetWidth, this.$el.offsetHeight);
-			canvas.width = size;
-			canvas.height = size;
+			canvas.width = this.$el.offsetWidth;
+			canvas.height = this.$el.offsetHeight
 			this.ctx = canvas.getContext("2d");
 			this.ctx.imageSmoothingEnabled = false;
 
@@ -119,7 +118,8 @@ export default {
 
 				//scale and copy the buffer onto the display canvas
 				this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-				this.ctx.drawImage(this.buffer, 0, 0, canvas.width, canvas.height);
+				const size = Math.min(canvas.width, canvas.height);
+				this.ctx.drawImage(this.buffer, (canvas.width - size) / 2, (canvas.height - size) / 2, size, size);
 				
 				this.scheduleUpdate();
 			});
@@ -130,7 +130,17 @@ export default {
 
 <style scoped>
 .container {
+	/*border: 1px solid red;*/
 	display: flex;
 	justify-content: center;
+	width: 100%;
+	height: 100%;
+}
+
+.display {
+	image-rendering: pixelated;
+	/*border: 1px solid yellow;*/
+	width: 100%;
+	height: 100%;	
 }
 </style>
