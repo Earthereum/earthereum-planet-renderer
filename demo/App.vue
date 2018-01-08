@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div class="container">
-      <planet-display :planet="planet"></planet-display>
+      <planet-display paused :planet="planet"></planet-display>
     </div>
   </div>
 </template>
@@ -67,7 +67,7 @@ export default {
 
 <style scoped>
 .container {
-  width: 500px;
-  height: 400px;
+  width: 800px;
+  height: 200px;
 }
 </style>
