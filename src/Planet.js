@@ -1,5 +1,6 @@
 import Particle from "./Particle.js";
 import Noise from "./Noise.js";
+import {fsin, fcos} from "./FastMath.js";
 const chroma = require("./chroma.min.js");
 
 export default class Planet {
@@ -119,18 +120,18 @@ export default class Planet {
 				//apply 3D rotation
 				if (rotX !== 0) {
 					const yt = y1, zt = z1;
-					y1 = yt * Math.cos(rotX) - zt * Math.sin(rotX);
-					z1 = yt * Math.sin(rotX) + zt * Math.cos(rotX);
+					y1 = yt * fcos(rotX) - zt * fsin(rotX);
+					z1 = yt * fsin(rotX) + zt * fcos(rotX);
 				}
 				if (rotY !== 0) {
 					const zt = z1, xt = x1;
-					x1 = zt * Math.sin(rotY) + xt * Math.cos(rotY);
-					z1 = zt * Math.cos(rotY) - xt * Math.sin(rotY);
+					x1 = zt * fsin(rotY) + xt * fcos(rotY);
+					z1 = zt * fcos(rotY) - xt * fsin(rotY);
 				}
 				if (rotZ !== 0) {
 					const xt = x1, yt = y1;
-					x1 = xt * Math.cos(rotZ) - yt * Math.sin(rotZ);
-					y1 = xt * Math.sin(rotZ) + yt * Math.cos(rotZ);
+					x1 = xt * fcos(rotZ) - yt * fsin(rotZ);
+					y1 = xt * fsin(rotZ) + yt * fcos(rotZ);
 				}
 
 				//compute color
@@ -224,9 +225,9 @@ export default class Planet {
 			const p = this.noise.rand(ni++)*1*Math.PI;
 
 			//convert to cartesian
-			const x = r * Math.cos(t) * Math.sin(p);
-			const y = r * Math.sin(t) * Math.sin(p);
-			const z = r * Math.cos(p);
+			const x = r * fcos(t) * fsin(p);
+			const y = r * fsin(t) * fsin(p);
+			const z = r * fcos(p);
 
 			//cloud intensity
 			const min = cloudDensity;

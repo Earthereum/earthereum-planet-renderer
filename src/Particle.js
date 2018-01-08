@@ -1,3 +1,5 @@
+import {fsin, fcos} from "./FastMath.js";
+
 export default class Particle {
 	/**
 	 * Constructs a particle instance representing an object floating above
@@ -114,18 +116,18 @@ export default class Particle {
 			//apply rotation
 			if (rotY !== 0) {
 				const zt = z1, xt = x1;
-				x1 = zt * Math.sin(rotY) + xt * Math.cos(rotY);
-				z1 = zt * Math.cos(rotY) - xt * Math.sin(rotY);
+				x1 = zt * fsin(rotY) + xt * fcos(rotY);
+				z1 = zt * fcos(rotY) - xt * fsin(rotY);
 			}
 			if (rotX !== 0) {
 				const yt = y1, zt = z1;
-				y1 = yt * Math.cos(rotX) - zt * Math.sin(rotX);
-				z1 = yt * Math.sin(rotX) + zt * Math.cos(rotX);
+				y1 = yt * fcos(rotX) - zt * fsin(rotX);
+				z1 = yt * fsin(rotX) + zt * fcos(rotX);
 			}
 			if (rotZ !== 0) {
 				const xt = x1, yt = y1;
-				x1 = xt * Math.cos(rotZ) - yt * Math.sin(rotZ);
-				y1 = xt * Math.sin(rotZ) + yt * Math.cos(rotZ);
+				x1 = xt * fcos(rotZ) - yt * fsin(rotZ);
+				y1 = xt * fsin(rotZ) + yt * fcos(rotZ);
 			}
 
 			//test to see if particle is occluded by planet
