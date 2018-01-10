@@ -197,9 +197,7 @@ export default class Planet {
 				let f = dz / (haloSize - planetSize) * 0.15;
 				f = Math.round(f * 14) / 14; //color steps
 
-				const r = haloCol[0];
-				const g = haloCol[1];
-				const b = haloCol[2];
+				const [r,g,b] = haloCol;
 
 				data[idx+0] = Math.max(0, Math.min(255, ~~r));
 				data[idx+1] = Math.max(0, Math.min(255, ~~g));
@@ -212,17 +210,17 @@ export default class Planet {
 	}
 
 	_makeClouds() {
-		const N = 2000;
 		const {size, atmoDensity, cloudDensity} = this.traits; 
+		const N = 3000 * size;
 		const cloudColor = chroma(this.terrains.byName("water").color).set("lab.l", "*2.5");
 		
 		let out = [];
 		let ni = 0;
 		for (let i=0; i<N; i++) {
 			//random spherical coordinate
-			const r = size + 0.05 + this.noise.rand(ni++) * this.noise.rand(ni++) * 0.3 * atmoDensity * size;
+			const r = size + 0.01 + this.noise.rand(ni++) * this.noise.rand(ni++) * 0.3 * atmoDensity * size;
 			const t = this.noise.rand(ni++)*2*Math.PI;
-			const p = this.noise.rand(ni++)*1*Math.PI;
+			const p = this.noise.rand(ni++)*Math.PI;
 
 			//convert to cartesian
 			const x = r * fcos(t) * fsin(p);
@@ -231,13 +229,20 @@ export default class Planet {
 
 			//cloud intensity
 			const min = cloudDensity;
-			const v = this.noise.perlin3d(x*2,y*4,z*2) + 0.5;
+			let v = this.noise.perlin3d(x*2,y*4,z*2) + 0.5;
 			if (v > min)
 				continue;
 
+			const radius = ((min - v) / min) * 0.08;
+
+			//ensure that cloud does not intersect with planet
+			const x2 = Math.max(r, size + radius * 2) * fcos(t) * fsin(p);
+			const y2 = Math.max(r, size + radius * 2) * fsin(t) * fsin(p);
+			const z2 = Math.max(r, size + radius * 2) * fcos(p);
+
 			out.push(new Particle({
-				x, y, z,
-				radius: (min - v) / min * 0.08,
+				x: x2, y: y2, z: z2,
+				radius: radius,
 				color: cloudColor.css()
 			}));
 		}
