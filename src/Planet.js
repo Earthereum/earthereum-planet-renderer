@@ -35,6 +35,9 @@ export default class Planet {
 		this._haloDirty = true;
 
 		this.clouds = this._makeClouds();
+
+		if (this.traits.ring)
+			this.ring = this._makeRing();
 	}
 
 	/**
@@ -244,6 +247,33 @@ export default class Planet {
 				x: x2, y: y2, z: z2,
 				radius: radius,
 				color: cloudColor.css()
+			}));
+		}
+		return out;
+	}
+
+	_makeRing() {
+		const {size, atmoDensity, cloudDensity} = this.traits; 
+		const N = 1000 * size;
+		
+		let out = [];
+		let ni = 0;
+		for (let i=0; i<N; i++) {
+			//random spherical coordinate
+			const atmoHeight = size * atmoDensity * 0.3;
+			const r = size + atmoHeight + 0.15 + this.noise.rand(ni++) * 0.4 * size;
+			const t = 0.0;
+			const p = this.noise.rand(ni++)*2*Math.PI;
+
+			//convert to cartesian
+			const x = r * fcos(t) * fsin(p);
+			const y = r * fsin(t) * fsin(p);
+			const z = r * fcos(p);
+
+			out.push(new Particle({
+				x, y, z,
+				radius: 0.02,
+				color: chroma(this.traits.accColor).css()
 			}));
 		}
 		return out;

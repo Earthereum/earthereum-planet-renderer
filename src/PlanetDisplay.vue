@@ -135,6 +135,10 @@ export default {
 				this.bctx.drawImage(this.haloBuffer, 0, 0);
 				this.bctx.globalCompositeOperation = "source-over";
 
+				//render ring onto the buffer canvas
+				if (planet.ring)
+					Particle.renderAll(planet, cam, planet.ring, this.bctx, true);
+
 				//scale and copy the buffer onto the display canvas
 				this.ctx.clearRect(0, 0, canvas.width, canvas.height);
 				const size = Math.min(canvas.width, canvas.height);

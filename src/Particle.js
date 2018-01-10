@@ -92,9 +92,10 @@ export default class Particle {
 	 * @param particles an iterable of Particle instances
 	 * @param destCtx the CanvasRenderingContext2D on which to render
 	 */
-	static renderAll(planet, camera, particles, destCtx) {
+	static renderAll(planet, camera, particles, destCtx, ringMode=false) {
 		let {rotX, rotY, rotZ, w, h} = camera;
 		const planetSize = planet.traits.size;
+		const atmoDensity = planet.traits.atmoDensity;
 
 		//recolor images
 		if (particles.length > 0) {
@@ -132,7 +133,11 @@ export default class Particle {
 
 			//test to see if particle is occluded by planet
 			const psize = p.radius;
-			const occludedTest = (x, y) => {
+			const occludedTest = ringMode ? (x, y) => {
+				//compute z coord of planet at the position of this particle
+				const planetZ = Math.sqrt((planetSize + atmoDensity * 0.3)**2 - x**2 - y**2);
+				return z1 > planetZ;
+			} : (x, y) => {
 				//compute z coord of planet at the position of this particle
 				const planetZ = Math.sqrt(planetSize**2 - x**2 - y**2);
 				return z1 > planetZ;
@@ -141,7 +146,7 @@ export default class Particle {
 				  o1 = occludedTest(x1 + psize, y1 - psize),
 				  o2 = occludedTest(x1 - psize, y1 + psize),
 				  o3 = occludedTest(x1 + psize, y1 + psize);
-			if (o0 && o1 && o2 && o3) //fully occluded
+			if (o0 && o1 && o2 && o3 && !ringMode) //fully occluded
 				continue;
 			const occluded = o0 || o1 || o2 || o3; //partially occluded
 
