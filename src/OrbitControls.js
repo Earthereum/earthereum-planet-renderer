@@ -17,9 +17,21 @@ export default class OrbitControls {
 			y: 0
 		};
 
-		document.addEventListener("mousedown", event => this.eDown(event), false);
-		document.addEventListener("mousemove", event => this.eMove(event), false);
-		document.addEventListener("mouseup", event => this.eUp(event), false);
+		this.addListeners();
+	}
+
+	addListeners() {
+		const handleDown = this.eDown.bind(this);
+		const handleMove = this.eMove.bind(this);
+		const handleUp = this.eUp.bind(this);
+		document.addEventListener("mousedown", handleDown, false);
+		document.addEventListener("mousemove", handleMove, false);
+		document.addEventListener("mouseup", handleUp, false);
+		this.removeListeners = () => {
+			document.removeEventListener("mousedown", handleDown);
+			document.removeEventListener("mousemove", handleMove);
+			document.removeEventListener("mouseup", handleUp);
+		};
 	}
 
 	update() {

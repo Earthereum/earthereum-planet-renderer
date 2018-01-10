@@ -37,24 +37,35 @@ export default {
 	data() {
 		return {}
 	},
-	mounted() {
-		this.init();
-	},
 	created() {
+		this.init();
 		window.addEventListener("resize", this.handleResize, false);
 	},
+	mounted() {
+		//prepare display canvas
+		const canvas = this.$refs.display;
+		this.ctx = canvas.getContext("2d");
+		this.handleResize();
+
+		//attach orbit controls to the display canvas
+		if (this.interactive)
+			this.orbitControls = new OrbitControls(canvas);
+		else
+			this.orbitControls = {update: () => {}, rotX: 0, rotY: 0};
+
+		//render at least once
+		this._dirty = true;
+		this._animFrame = null;
+		this.scheduleUpdate();
+	},
 	destroyed() {
+		cancelAnimationFrame(this._animFrame);
 		window.removeEventListener("resize", this.handleResize, false);
+		if (this.orbitControls instanceof OrbitControls)
+			this.orbitControls.removeListeners();
 	},
 	methods: {
 		init() {
-			this._dirty = true;
-
-			//prepare display canvas
-			const canvas = this.$refs.display;
-			this.ctx = canvas.getContext("2d");
-			this.handleResize();
-
 			//create buffer canvas
 			this.buffer = document.createElement("canvas");
 			const buffer = this.buffer;
@@ -70,15 +81,6 @@ export default {
 
 			//create image buffer for planet terrain
 			this.terrainData = new ImageData(this.resolutionX, this.resolutionY);
-
-			//attach orbit controls to the display canvas
-			if (this.interactive)
-				this.orbitControls = new OrbitControls(canvas);
-			else
-				this.orbitControls = {update: () => {}, rotX: 0, rotY: 0};
-
-			//render at least once
-			requestAnimationFrame(() => this.scheduleUpdate());
 		},
 
 		handleResize() {
@@ -90,10 +92,12 @@ export default {
 		},
 
 		scheduleUpdate() {
-			if (this.paused && !this._dirty)
-				requestAnimationFrame(() => this.scheduleUpdate());
-			else
-				requestAnimationFrame(() => this.update());
+			if (this.paused && !this._dirty) {
+				this._animFrame = requestAnimationFrame(() => this.scheduleUpdate());
+			}
+			else {
+				this._animFrame = requestAnimationFrame(() => this.update());
+			}
 		},
 
 		update() {
