@@ -265,10 +265,13 @@ export class TerrainSet {
 	}
 
 	atHeight(height) {
-		const terrain = this._list.find(t => t.startHeight <= height);
-		if (!terrain)
-			return null;
-		return terrain;
+		const len = this._list.length;
+		for (let i=0; i<len; i++) {
+			const t = this._list[i];
+			if (t.startHeight <= height)
+				return t;
+		}
+		return null;
 	}
 
 	static buildSet({numTerrains, waterHeight, baseColor, accColor}) {

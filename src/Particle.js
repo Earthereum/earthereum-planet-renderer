@@ -151,7 +151,6 @@ export default class Particle {
 
 
 			//render particle
-			destCtx.fillStyle = p.color;
 			if (size > Particle.IMAGE_SIZE) {
 				//support particles bigger than Particle.IMAGE_SIZE
 				const img = Particle.image[Particle.IMAGE_SIZE];
